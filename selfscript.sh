@@ -87,7 +87,7 @@ base64 -d /etc/nginx/Mu.txt > /etc/nginx/Mu.tar.gz | tar -xzvf /etc/nginx/Mu.tar
 #申请证书
 echo -e "\e[32m开始申请SSL证书。\e[0m"
 
-sudo openssl dhparam -out /etc/nginx/dhparam.pem 2048
+openssl dhparam -out /etc/nginx/dhparam.pem 2048
 
 sudo certbot certonly --force-renewal --agree-tos -n -w /etc/nginx/Mu -m cert@$domain -d $domain
 
