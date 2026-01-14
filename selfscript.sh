@@ -330,10 +330,9 @@ cat > /etc/nginx/sites-available/default << DEFAULT
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
-    listen 443 default_server;
-    listen [::]:443 default_server;
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
     server_name _;
-    return 301 https://\$host\$request_uri;
     return 444;
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
