@@ -74,6 +74,16 @@ do
 	esac
 done
 
+#创建ACME-challenge目录
+mkdir -p /etc/nginx/Mu && chown www-data /etc/nginx/Mu
+
+#申请证书
+echo -e "\e[32m开始申请SSL证书。\e[0m"
+
+openssl dhparam -out /etc/nginx/dhparam.pem 2048
+
+certbot certonly --webroot --force-renewal --agree-tos -n -w /etc/nginx/Mu -m cert@$domain -d $domain
+
 #cat > file << EOF 覆盖&转义(文本中不需要转义的特殊符号前加\)
 #cat >> file << 'EOF' 追加&禁止转义(开头EOF加上''即可)
 cat > /etc/nginx/Mu.txt << 'TARGZ'
@@ -86,34 +96,7 @@ base64 -d /etc/nginx/Mu.txt > /etc/nginx/Mu.tar.gz
 #解压
 tar -xzvf /etc/nginx/Mu.tar.gz -C /etc/nginx
 
-#申请证书
-echo -e "\e[32m开始申请SSL证书。\e[0m"
-
-cat > /etc/nginx/sites-available/default << WEBROOT
-server {
-    listen 80 reuseport;
-    listen [::]:80 reuseport;
-    listen 443 ssl http2 reuseport;
-    listen [::]:443 ssl http2 reuseport;
-    server_name $domain;
-    root /etc/nginx/Mu;
-
-    location / {
-        return 301 https://$domain\$request_uri;
-    }
-
-    # ACME-challenge
-    location ^~ /.well-known/acme-challenge/ {
-        root /etc/nginx/Mu;
-    }
-}
-WEBROOT
-
-openssl dhparam -out /etc/nginx/dhparam.pem 2048
-
-certbot certonly --webroot --force-renewal --agree-tos -n -w /etc/nginx/Mu -m cert@$domain -d $domain
-
-#覆盖conf
+#覆盖nginx.conf
 sudo cat > /etc/nginx/nginx.conf << 'CONFIG'
 #Mu
 user www-data;
@@ -199,8 +182,8 @@ http {
 }
 CONFIG
 
-#创建conf
-sudo cat > /etc/nginx/conf.d/FLO.conf << DEFAULT
+#创建ssl.conf
+sudo cat > /etc/nginx/conf.d/FLO.conf << FLO
 #Mu
 server {
     listen 443 ssl http2 reuseport;
@@ -306,10 +289,9 @@ server {
         root /etc/nginx/Mu;
     }
 }
+FLO
 
-DEFAULT
-
-#include proxy.conf;
+#模块include proxy.conf;
 cat > /etc/nginx/proxy.conf << 'PROXY'
 proxy_http_version 1.1;
 proxy_cache_bypass $http_upgrade;
@@ -333,8 +315,8 @@ proxy_send_timeout 60s;
 proxy_read_timeout 60s;
 PROXY
 
-#禁止IP访问
-cat > /etc/nginx/sites-available/default << NOIP
+#覆盖default
+cat > /etc/nginx/sites-available/default << DEFAULT
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
@@ -347,7 +329,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
     ssl_trusted_certificate /etc/letsencrypt/live/$domain/chain.pem;
 }
-NOIP
+DEFAULT
 
 #创建软连接
 #sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
@@ -356,8 +338,6 @@ NOIP
 sudo nginx -t && sudo nginx -s reload
 
 echo -e "\e[35m已配置完成！\e[0m"
-
-
 
 echo -e "\e[35mvim 按下i进入编辑模式 | 按下ecs退出编辑模式 | 输入:wq(!强制)保存并退出，输入:q!退出不保存\e[0m"
 
