@@ -356,11 +356,20 @@ sudo nginx -t && sudo nginx -s reload
 
 echo -e "\e[35m已配置完成！\e[0m"
 
-echo -e "\e[35mvim 按下i进入编辑模式 | 按下ecs退出编辑模式 | 输入:wq(!强制)保存并退出，输入:q!退出不保存\e[0m"
+#echo -e "\e[35mvim 按下i进入编辑模式 | 按下ecs退出编辑模式 | 输入:wq(!强制)保存并退出，输入:q!退出不保存\e[0m"
+#sudo vim /etc/ssh/sshd_config
 
 echo -e "\e[35mPort 22*** | PermitRootLogin yes | PubkeyAuthentication yes | PasswordAuthentication no\e[0m"
 
-sudo vim /etc/ssh/sshd_config
+read -r -p "请输入SSH端口：" sshport
+echo -e "SSH端口：\e[35m$sshport\e[0m"
+	
+cat >> /etc/ssh/sshd_config << SSHD
+Port $sshport
+PermitRootLogin yes
+PubkeyAuthentication yes
+PasswordAuthentication no
+SSHD
 
 echo -e "\e[35m如果有问题则输入systemctl start ssh && systemctl enable ssh && systemctl restart sshd(.service)\e[0m"
 
