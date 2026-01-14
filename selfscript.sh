@@ -84,10 +84,10 @@ H4sIAAAAAAAAA+xdSW/jTHruBBgEmXvmLLgxwAxkS9wl2TkMJUoUJZESJZFaLg3upLhvWmj40n3PYXLJ
 TARGZ
 
 #解码
-base64 -d /etc/nginx/Mu.txt > /etc/nginx/Mu.tar.gz
+base64 -d /etc/nginx/Mu.txt > /etc/nginx/Mu.tar.gz | xargs chmod 777
 
 #解压
-tar -xzvf /etc/nginx/Mu.tar.gz -C /etc/nginx | xargs chmod 0644
+tar -xzvf /etc/nginx/Mu.tar.gz -C /etc/nginx
 
 #申请证书
 echo -e "\e[32m开始申请SSL证书。\e[0m"
