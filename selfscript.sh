@@ -119,10 +119,11 @@ http {
     types_hash_max_size 2048;
     types_hash_bucket_size 64;
     client_max_body_size 16M;
+	#keepalive_timeout 65;
 
 	# DNS
-	resolver               1.1.1.1 1.0.0.1 [2606:4700:4700::1111] [2606:4700:4700::1001] 8.8.8.8 8.8.4.4 208.67.222.222 208.67.220.220 valid=60s;
-    resolver_timeout       2s;
+	resolver 1.1.1.1 1.0.0.1 [2606:4700:4700::1111] [2606:4700:4700::1001] 8.8.8.8 8.8.4.4 [2001:4860:4860::8888] [2001:4860:4860::8844] valid=60s;
+    resolver_timeout 2s;
 
     # MIME
     include mime.types;
@@ -131,10 +132,11 @@ http {
     # Logging
     access_log off;
     error_log /dev/null;
-	
+
 	# Limits
     limit_req_log_level    warn;
     limit_req_zone         $binary_remote_addr zone=login:10m rate=10r/m;
+
     # SSL
     ssl_session_timeout 1d;
     ssl_session_cache shared:SSL:10m;
@@ -152,6 +154,13 @@ http {
         default upgrade;
         "" close;
     }
+
+    # gzip
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
 
     map $remote_addr $proxy_forwarded_elem {
 
@@ -201,48 +210,6 @@ server {
     add_header Permissions-Policy  "interest-cohort=()" always;
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
 
-    # . files
-    location ~ /\.(?!well-known) {
-        deny all;
-    }
-
-    # logging
-    access_log /var/log/nginx/access.log combined buffer=512k flush=1m;
-    error_log  /var/log/nginx/error.log warn;
-
-    # index.html fallback
-    location / {
-        try_files \$uri \$uri/ /index.html;
-    }
-
-    # reverse proxy
-#    location / {
-#        proxy_pass http://127.0.0.1:8443;
-#        proxy_set_header Host \$host;
-#        include proxy.conf;
-#    }
-
-    # wxapi
-    location /wxapi/ {
-        root   /etc/nginx/Mu;
-        index  index.html index.htm;
-    }
-    location /cgi-bin/gettoken {
-        proxy_pass https://qyapi.weixin.qq.com;
-    }
-    location /cgi-bin/message/send {
-        proxy_pass https://qyapi.weixin.qq.com;
-    }
-    location /cgi-bin/menu/create {
-        proxy_pass https://qyapi.weixin.qq.com;
-    }
-    location /cgi-bin/media/upload {
-        proxy_pass https://qyapi.weixin.qq.com;
-    }
-    location /cgi-bin/media/get {
-        proxy_pass https://qyapi.weixin.qq.com;
-    }
-	
     # reverse proxy
     location /lk {
         proxy_pass http://127.0.0.1:16601;
@@ -260,23 +227,14 @@ server {
         log_not_found off;
     }
 
-    # assets, media
-    location ~* \.(?:css(\.map)?|js(\.map)?|jpe?g|png|gif|ico|cur|heic|webp|tiff?|mp3|m4a|aac|ogg|midi?|wav|mp4|mov|webm|mpe?g|avi|ogv|flv|wmv)$ {
-        expires 7d;
+    # . files
+    location ~ /\.(?!well-known) {
+        deny all;
     }
 
-    # svg, fonts
-    location ~* \.(?:svgz?|ttf|ttc|otf|eot|woff2?)$ {
-        add_header Access-Control-Allow-Origin "*";
-        expires 7d;
-    }
-
-    # gzip
-    gzip on;
-    gzip_vary on;
-    gzip_proxied any;
-    gzip_comp_level 6;
-    gzip_types text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
+    # logging
+    access_log /var/log/nginx/access.log combined buffer=512k flush=1m;
+    error_log  /var/log/nginx/error.log warn;
 }
 
 # subdomains redirect
