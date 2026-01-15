@@ -157,6 +157,11 @@ http {
     gzip_comp_level 6;
     gzip_types text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
 
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 30d;
+        add_header Cache-Control "public";
+    }
+
     # Connection header for WebSocket reverse proxy
     map $http_upgrade $connection_upgrade {
         default upgrade;
