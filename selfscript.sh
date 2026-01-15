@@ -131,7 +131,10 @@ http {
     # Logging
     access_log off;
     error_log /dev/null;
-
+	
+	# Limits
+    limit_req_log_level    warn;
+    limit_req_zone         $binary_remote_addr zone=login:10m rate=10r/m;
     # SSL
     ssl_session_timeout 1d;
     ssl_session_cache shared:SSL:10m;
