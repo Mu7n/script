@@ -120,6 +120,10 @@ http {
     types_hash_bucket_size 64;
     client_max_body_size 16M;
 
+	# DNS
+	resolver               1.1.1.1 1.0.0.1 [2606:4700:4700::1111] [2606:4700:4700::1001] 8.8.8.8 8.8.4.4 208.67.222.222 208.67.220.220 valid=60s;
+    resolver_timeout       2s;
+
     # MIME
     include mime.types;
     default_type application/octet-stream;
@@ -216,7 +220,7 @@ server {
 #    }
 
     # wxapi
-    location /wxapi {
+    location /wxapi/ {
         root   /etc/nginx/Mu;
         index  index.html index.htm;
     }
@@ -277,7 +281,7 @@ server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
     server_name *.$domain;
-    return 301 https://$domain\$request_uri;
+    return 301 https://\$host\$request_uri;
 
     # SSL
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
@@ -291,7 +295,7 @@ server {
     server_name .$domain;
 
     location / {
-        return 301 https://$domain\$request_uri;
+        return 301 https://\$host\$request_uri;
     }
 
     # ACME-challenge
