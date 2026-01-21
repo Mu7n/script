@@ -16,7 +16,7 @@
 #base64 -w 0 Mu.tar.gz > Mu.txt
 #base64解码
 #base64 -d /etc/nginx/Mu.txt > /etc/nginx/Mu.tar.gz
-#echo 'BASE64***' | base64 --decode | tee /etc/nginx/Mu.tar.gz > /dev/null （还不懂啥意思记录一下）
+#echo 'BASE64***' | base64 --decode | tee /etc/nginx/Mu.tar.gz > /dev/null （还不懂,记录一下）
 #cat > file << EOF 覆盖&转义(文本中不需要转义的特殊符号前加\)
 #cat >> file << 'EOF' 追加&禁止转义(开头EOF加上''即可)
 
@@ -99,13 +99,13 @@ pid /run/nginx.pid;
 worker_processes auto;
 worker_rlimit_nofile 65535;
 
-# Load modules
-include /etc/nginx/modules-enabled/*.conf;
-
 events {
     multi_accept on;
     worker_connections 65535;
 }
+
+# Load modules
+include /etc/nginx/modules-enabled/*.conf;
 
 http {
     charset utf-8;
@@ -122,14 +122,6 @@ http {
 	# DNS
 	resolver 1.1.1.1 1.0.0.1 [2606:4700:4700::1111] [2606:4700:4700::1001] 8.8.8.8 8.8.4.4 [2001:4860:4860::8888] [2001:4860:4860::8844] valid=60s;
     resolver_timeout 2s;
-
-    # MIME
-    include mime.types;
-    default_type application/octet-stream;
-
-    # Logging
-    access_log off;
-    error_log /dev/null;
 
     # SSL
     ssl_session_timeout 1d;
@@ -154,6 +146,14 @@ http {
     limit_req_log_level warn;
     limit_req_zone $binary_remote_addr zone=login:10m rate=10r/m;
 
+    # MIME
+    include mime.types;
+    default_type application/octet-stream;
+
+    # Logging
+    access_log off;
+    error_log /dev/null;
+
     # Load configs
     include /etc/nginx/conf.d/*.conf;
     include /etc/nginx/sites-enabled/*;
@@ -164,9 +164,12 @@ CONFIG
 cat > /etc/nginx/conf.d/FLO.conf << FLO
 #Mu
 server {
+    listen 80 reuseport;
+    listen [::]:80 reuseport;
     listen 443 ssl http2 reuseport;
     listen [::]:443 ssl http2 reuseport;
     server_name $domain;
+    return 301 https://\$host\$request_uri;
 
     # SSL
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
@@ -202,6 +205,11 @@ server {
         deny all;
     }
 
+    # ACME-challenge
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
     # logging
     access_log /var/log/nginx/access.log combined buffer=512k flush=1m;
     error_log  /var/log/nginx/error.log warn;
@@ -217,19 +225,6 @@ server {
     # SSL
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
-}
-
-# HTTP redirect
-server {
-    listen 80 reuseport;
-    listen [::]:80 reuseport;
-    server_name *.$domain;
-    return 301 https://\$host\$request_uri;
-
-    # ACME-challenge
-    location ^~ /.well-known/acme-challenge/ {
-        root /var/www/html;
-    }
 }
 FLO
 
@@ -261,6 +256,7 @@ server {
     listen [::]:80 default_server;
     listen 443 ssl http2 default_server;
     listen [::]:443 ssl http2 default_server;
+	server_name _;
     return 444;
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
