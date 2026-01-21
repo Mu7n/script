@@ -117,11 +117,14 @@ http {
     types_hash_max_size 2048;
     types_hash_bucket_size 64;
     client_max_body_size 16M;
-    keepalive_timeout 65;
 
-    # DNS
-    resolver 1.1.1.1 1.0.0.1 [2606:4700:4700::1111] [2606:4700:4700::1001] 8.8.8.8 8.8.4.4 [2001:4860:4860::8888] [2001:4860:4860::8844] valid=60s;
-    resolver_timeout 2s;
+    # MIME
+    include mime.types;
+    default_type application/octet-stream;
+
+    # Logging
+    access_log off;
+    error_log /dev/null;
 
     # SSL
     ssl_session_timeout 1d;
@@ -139,43 +142,35 @@ http {
     limit_req_log_level warn;
     limit_req_zone $binary_remote_addr zone=login:10m rate=10r/m;
 
-    # MIME
-    include mime.types;
-    default_type application/octet-stream;
-
-    # Logging
-    access_log off;
-    error_log /dev/null;
-
     # Gzip
     gzip on;
     gzip_vary on;
     gzip_proxied any;
     gzip_comp_level 6;
+    gzip_buffers 16 8k;
+    gzip_http_version 1.1;
     gzip_types text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
 
     # Security headers
-    add_header X-XSS-Protection "1; mode=block";
-    add_header X-Content-Type-Options "nosniff";
     add_header X-Frame-Options "SAMEORIGIN";
-    add_header Referrer-Policy "no-referrer-when-downgrade";
-    add_header Content-Security-Policy "default-src 'self' http: https: ws: wss: data: blob: 'unsafe-inline'; frame-ancestors 'self';";
+    add_header X-Content-Type-Options "nosniff";
+    add_header X-XSS-Protection "1; mode=block";
     add_header Permissions-Policy "interest-cohort=()";
+    add_header Referrer-Policy "no-referrer-when-downgrade";
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload";
-    add_header 'Access-Control-Allow-Origin' '*';
+    add_header Content-Security-Policy "default-src 'self' http: https: ws: wss: data: blob: 'unsafe-inline'; frame-ancestors 'self';";
 
     # Proxy headers
     proxy_http_version 1.1;
     proxy_ssl_server_name on;
-    proxy_set_header Upgrade $http_upgrade;
+    proxy_cache_bypass $http_upgrade;
     proxy_set_header Connection "upgrade";
+    proxy_set_header Upgrade $http_upgrade;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-Host $host;
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header X-Forwarded-Port $server_port;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    #proxy_set_header Origin $http_origin;
-    proxy_cache_bypass $http_upgrade;
     proxy_connect_timeout 60s;
     proxy_send_timeout 60s;
     proxy_read_timeout 60s;
@@ -190,29 +185,34 @@ CONFIG
 cat > /etc/nginx/conf.d/FLO.conf << FLO
 #Mu
 server {
-    listen 80 reuseport;
-    listen [::]:80 reuseport;
-    listen 443 ssl http2 reuseport;
-    listen [::]:443 ssl http2 reuseport;
+    listen 80;
+    listen [::]:80;
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
     server_name $domain;
-    return 301 https://\$host\$request_uri;
+    return 301 https://$domain\$request_uri;
 
     # SSL
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
 
-    # reverse proxy
+    # Root
+    location / {
+        root /etc/nginx/Mu;
+    }
+
+    # Reverse proxy
     location /lk {
         proxy_pass http://127.0.0.1:16601;
         proxy_set_header Host \$host;
     }
 
-    # favicon.ico
+    # Favicon.ico
     location = /favicon.ico {
         log_not_found off;
     }
 
-    # robots.txt
+    # Robots.txt
     location = /robots.txt {
         log_not_found off;
     }
@@ -227,7 +227,7 @@ server {
         root /var/www/html;
     }
 
-    # logging
+    # Logging
     access_log /var/log/nginx/access.log combined buffer=512k flush=1m;
     error_log  /var/log/nginx/error.log warn;
 }
@@ -237,7 +237,7 @@ server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
     server_name *.$domain;
-    return 301 https://\$host\$request_uri;
+    return 301 https://$domain\$request_uri;
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
 }
@@ -251,7 +251,7 @@ server {
     listen 443 ssl http2 default_server;
     listen [::]:443 ssl http2 default_server;
     server_name _;
-    return 301 https://\$host\$request_uri;
+    return 301 https://$domain\$request_uri;
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
 }
