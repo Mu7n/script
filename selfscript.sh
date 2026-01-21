@@ -99,13 +99,13 @@ pid /run/nginx.pid;
 worker_processes auto;
 worker_rlimit_nofile 65535;
 
+# Load modules
+include /etc/nginx/modules-enabled/*.conf;
+
 events {
     multi_accept on;
     worker_connections 65535;
 }
-
-# Load modules
-include /etc/nginx/modules-enabled/*.conf;
 
 http {
     charset utf-8;
@@ -118,7 +118,7 @@ http {
     types_hash_bucket_size 64;
     client_max_body_size 16M;
 	keepalive_timeout 65;
-
+	
 	# DNS
 	resolver 1.1.1.1 1.0.0.1 [2606:4700:4700::1111] [2606:4700:4700::1001] 8.8.8.8 8.8.4.4 [2001:4860:4860::8888] [2001:4860:4860::8844] valid=60s;
     resolver_timeout 2s;
@@ -257,7 +257,7 @@ server {
     listen 443 ssl http2 default_server;
     listen [::]:443 ssl http2 default_server;
 	server_name _;
-    return 444;
+	return 301 https://\$host\$request_uri;
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
 }
