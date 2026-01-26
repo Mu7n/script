@@ -85,10 +85,11 @@ else
 		echo "1）强制申请"
 		echo "2）跳过申请"
 		echo "3）退出"
-		read -p "请输入选项（1-3）： " OPTION
+		read -p "请输入选项：" OPTION
 		case $OPTION in
 		    1)
 			    echo -e "\e[32m强制申请SSL证书。\e[0m"
+				domain="$(ls -l /etc/letsencrypt/live |awk '/^d/ {print $NF}')"
 				certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
 				break
 				;;
