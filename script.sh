@@ -68,7 +68,8 @@ while true; do
 			echo -e "域名：\e[35m$domain\e[0m"
 			;;
 		*) echo -e "\e[31m错误，请重新输入！\e[0m"
-		    continue
+		    sleep 1
+			continue
 			;;
 	esac
 done
@@ -78,7 +79,37 @@ echo -e "\e[32m申请SSL证书。\e[0m"
 if [ ! -s /etc/nginx/dhparam.pem ]; then
     openssl dhparam -out /etc/nginx/dhparam.pem 2048
 fi
-certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
+if [ ! -s /etc/letsencrypt/live/$domain/fullchain.pem ]; then
+    certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
+else
+    while true; do
+	    echo "检测到已有SSL证书"
+		echo "1）强制申请"
+		echo "2）跳过申请"
+		echo "3）退出"
+		read -p "请输入选项（1-3）： " OPTION
+		case $OPTION in
+		    1)
+			    echo -e "\e[32m强制申请SSL证书。\e[0m"
+				certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
+				break
+				;;
+			2)
+			    echo -e "\e[32m跳过申请SSL证书。\e[0m"
+				break
+				;;
+			3)
+			    echo -e "\e[32m已退出。\e[0m"
+				exit 0
+				;;
+			*)
+			    echo -e "\e[31m错误，请重新输入！\e[0m"
+				sleep 1
+				continue
+				;;
+		esac
+	done
+fi
 
 # 伪装站点
 cat > /etc/nginx/Mu.txt << 'TARGZ'
@@ -324,7 +355,8 @@ while true; do
 			read -r -p "请输入PASSWORD：" PASSWORD
 			;;
 		*) echo -e "\e[31m错误，请重新输入！\e[0m"
-		    continue
+		    sleep 1
+			continue
 			;;
 	esac
 done
