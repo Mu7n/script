@@ -1,5 +1,5 @@
 # Mu
 
 ```bash
-bash <(curl -L https://raw.githubusercontent.com/bulzmu/Self-Script/refs/heads/main/selfscript.sh)
+bash <(curl -L https://raw.githubusercontent.com/Mu7n/script/main/script.sh)
 ```
