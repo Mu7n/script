@@ -67,6 +67,7 @@ case $input in
 		echo -e "域名：\e[35m$domain\e[0m"
 	;;
 	*) echo -e "\e[31m错误，请重新输入！\e[0m"
+	    continue
 	;;
 esac
 
