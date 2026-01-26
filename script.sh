@@ -31,6 +31,8 @@
 #命令 2>&1 > /dev/null；将错误信息显示到屏幕；正确信息输出/dev/null不显示到屏幕上；
 #find / *.txt 2>/dev/null；根目录中没有权限，错误信息太多，显示正确信息；
 
+\n
+
 # 关闭SELINUX
 #if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then; sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config; setenforce 0; fi
 
@@ -53,8 +55,6 @@ echo -e "\e[32m开始安装nginx和certbot。\e[0m"
 sudo apt install -y nginx certbot
 
 # 域名
-echo -e "\e[32m开始配置Nginx。\e[0m"
-
 read -r -p "请输入域名：" domain
 echo -e "域名：\e[35m$domain\e[0m"
 while true; do
@@ -74,7 +74,7 @@ while true; do
 done
 
 # 证书
-echo -e "\e[32m开始申请SSL证书。\e[0m"
+echo -e "\e[32m申请SSL证书。\e[0m"
 if [ ! -s /etc/nginx/dhparam.pem ]; then
     openssl dhparam -out /etc/nginx/dhparam.pem 2048
 fi
