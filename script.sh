@@ -313,13 +313,23 @@ while ! test -z $(ps -ef | grep frps | grep -v grep); do
     pkill -9 frps
 done
 
+if [ -s /lib/systemd/system/frps.service ]; then
+while true; do
+    echo -e "\e[32m检测到已安装frps。\e[0m"
+	echo -e "\e[32m1）升级frps\e[0m"
+	echo -e "\e[32m2）退出\e[0m"
+	echo -e "\e[32m3）跳过申请\e[0m"
+	read -p "请输入选项：" OPTION
+	case $OPTION in
+done
+else
 VER=$(curl -s $FRPAPI | grep '"tag_name":' | cut -d '"' -f 4 | cut -c 2-)
-if [ ! -z $VER ]; then
-    FRPTAR="frp_${VER}_linux_${ARCH}.tar.gz"
-	FRPURL="${FRPFILE}/v${VER}/${FRPTAR}"
-	echo -e "\e[32m下载$FRPTAR\e[0m"
-	curl -L $FRPURL -o $FRPTAR
-	if [ -s $FRPTAR ]; then
+    if [ ! -z $VER ]; then
+	    FRPTAR="frp_${VER}_linux_${ARCH}.tar.gz"
+		FRPURL="${FRPFILE}/v${VER}/${FRPTAR}"
+		echo -e "\e[32m下载$FRPTAR\e[0m"
+		curl -L $FRPURL -o $FRPTAR
+	    if [ -s $FRPTAR ]; then
 	    echo -e "\e[32m提取$FRPTAR\e[0m"
 		mkdir -p $FRPPATH
 		tar xzvf $FRPTAR
@@ -350,7 +360,6 @@ if [ ! -z $VER ]; then
 	done
 fi
 
-if [ ! -s /lib/systemd/system/frps.service ]; then
 # 配置frps.toml
 cat > ${FRPPATH}/frps.toml << TOML
 bindAddr = "0.0.0.0"
