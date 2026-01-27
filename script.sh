@@ -39,15 +39,15 @@ set -u
 # 检查系统
 arch=$(uname -m)
 case $arch in
-    x86_64)              Is_64bit='y'; ARCH="amd64";;
-    aarch64)             Is_64bit='y'; ARCH="arm64";;
-    arm*|armv*)          Is_64bit='n'; ARCH="arm";;
-    mips)                Is_64bit='n'; ARCH="mips";;
-    mips64)              Is_64bit='y'; ARCH="mips64";;
-    mips64el)            Is_64bit='y'; ARCH="mips64le";;
-    mipsel)              Is_64bit='n'; ARCH="mipsle";;
-    riscv64)             Is_64bit='y'; ARCH="riscv64";;
-    *)                   echo "未知系统！";;
+    x86_64)        Is_64bit='y'; ARCH="amd64";;
+    aarch64)       Is_64bit='y'; ARCH="arm64";;
+    arm*|armv*)    Is_64bit='n'; ARCH="arm";;
+    mips)          Is_64bit='n'; ARCH="mips";;
+    mips64)        Is_64bit='y'; ARCH="mips64";;
+    mips64el)      Is_64bit='y'; ARCH="mips64le";;
+    mipsel)        Is_64bit='n'; ARCH="mipsle";;
+    riscv64)       Is_64bit='y'; ARCH="riscv64";;
+    *)             echo "未知系统！";;
 esac
 
 # Nginx
@@ -313,54 +313,44 @@ while ! test -z $(ps -ef | grep frps | grep -v grep); do
     pkill -9 frps
 done
 
-# 
-if [ ! -s ${FRPPATH}/frps.toml ]; then
-    VER=$(curl -s $FRPAPI | grep '"tag_name":' | cut -d '"' -f 4 | cut -c 2-)
-	if [ ! -z $VER ]; then
-	    FRPTAR="frp_${VER}_linux_${ARCH}.tar.gz"
-		FRPURL="${FRPFILE}/v${VER}/${FRPTAR}"
-		echo -e "\e[32m下载$FRPTAR\e[0m"
-		curl -L $FRPURL -o $FRPTAR
-		if [ -s $FRPTAR ]; then
-    echo -e "\e[32m提取$FRPTAR\e[0m"
-	mkdir -p $FRPPATH
-	tar xzvf $FRPTAR
-	mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
-	rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH} 
-else
-    echo -e "\e[31m未找到文件！\e[0m"
-	read -r -p "请输入链接：" FRPURL
+VER=$(curl -s $FRPAPI | grep '"tag_name":' | cut -d '"' -f 4 | cut -c 2-)
+if [ ! -z $VER ]; then
+    FRPTAR="frp_${VER}_linux_${ARCH}.tar.gz"
+	FRPURL="${FRPFILE}/v${VER}/${FRPTAR}"
 	echo -e "\e[32m下载$FRPTAR\e[0m"
 	curl -L $FRPURL -o $FRPTAR
-	echo -e "\e[32m提取$FRPTAR\e[0m"
-	mkdir -p $FRPPATH
-	tar xzvf $FRPTAR
-	mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
-	rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH}
+	if [ -s $FRPTAR ]; then
+	    echo -e "\e[32m提取$FRPTAR\e[0m"
+		mkdir -p $FRPPATH
+		tar xzvf $FRPTAR
+		mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
+		rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH}
+	else
+	    echo -e "\e[31m未找到文件！\e[0m"
+		read -r -p "请输入链接：" FRPURL
+		echo -e "\e[32m下载$FRPTAR\e[0m"
+		curl -L $FRPURL -o $FRPTAR
+		echo -e "\e[32m提取$FRPTAR\e[0m"
+		mkdir -p $FRPPATH
+		tar xzvf $FRPTAR
+		mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
+		rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH}
+	fi
+	read -r -p "请输入USERNAME：" USERNAME
+	read -r -p "请输入PASSWORD：" PASSWORD
+	TOKEN="${USERNAME}${PASSWORD}"
+	echo -e "TOKEN：\e[35m$TOKEN\e[0m"
+	while true; do
+	    read -r -p "请确认令牌[Yes/No]：" input
+		case $input in
+		    [yY][eE][sS]|[yY]) echo -e "\e[35m已确认。\e[0m" ; break ;;
+			[nN][oO]|[nN]) echo -e "\e[32m请重新输入。\e[0m" ; read -r -p "请输入USERNAME：" USERNAME ; read -r -p "请输入PASSWORD：" PASSWORD ;;
+			*) echo -e "\e[31m错误，请重新输入！\e[0m" ; sleep 1 ; continue ;;
+		esac
+	done
 fi
 
 if [ ! -s /lib/systemd/system/frps.service ]; then
-read -r -p "请输入USERNAME：" USERNAME
-read -r -p "请输入PASSWORD：" PASSWORD
-TOKEN="${USERNAME}${PASSWORD}"
-echo -e "TOKEN：\e[35m$TOKEN\e[0m"
-while true; do
-    read -r -p "请确认令牌[Yes/No]：" input
-	case $input in
-	    [yY][eE][sS]|[yY]) echo -e "\e[35m已确认。\e[0m"
-		    break
-			;;
-		[nN][oO]|[nN]) echo -e "\e[32m请重新输入。\e[0m"
-		    read -r -p "请输入USERNAME：" USERNAME
-			read -r -p "请输入PASSWORD：" PASSWORD
-			;;
-		*) echo -e "\e[31m错误，请重新输入！\e[0m"
-		    sleep 1
-			continue
-			;;
-	esac
-done
-
 # 配置frps.toml
 cat > ${FRPPATH}/frps.toml << TOML
 bindAddr = "0.0.0.0"
