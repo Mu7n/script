@@ -1,7 +1,6 @@
 #!/bin/bash
 
 #用到哪，学到哪。
-
 #bash <(curl -sSL https://get.docker.com)；安装docker
 #systemctl start sshd = service sshd start；系统服务
 #ps -ef | grep 进程名 | grep -v grep | awk '{print $2}' | xargs kill -9；查找并关闭进程
@@ -300,59 +299,48 @@ DEFAULT
 # 创建软连接
 #sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
-# 重载
 echo -e "\e[35mNginx配置完成！\e[0m"
 sudo nginx -t && sudo nginx -s reload
 fi
 
 # frp
-while ! test -z "$(ps -ef | grep frps)"; do
-    pkill -9 frps
-done
-
 FRPPATH="/opt/Mu/frps"
 FRPFILE="https://github.com/fatedier/frp/releases/download"
 FRPAPI="https://api.github.com/repos/fatedier/frp/releases/latest"
 
-# 下载
+# 结束进程
+while ! test -z $(ps -ef | grep frps | grep -v grep); do
+    pkill -9 frps
+done
+
 VER=$(curl -s $FRPAPI | grep '"tag_name":' | cut -d '"' -f 4 | cut -c 2-)
 if [ ! -z $VER ]; then
     FRPTAR="frp_${VER}_linux_${ARCH}.tar.gz"
 	FRPURL="${FRPFILE}/v${VER}/${FRPTAR}"
-
-	echo -e "\e[32m开始下载$FRPTAR\e[0m"
+	echo -e "\e[32m下载$FRPTAR\e[0m"
 	curl -L $FRPURL -o $FRPTAR
 else
     echo -e "\e[31m获取版本失败！\e[0m"
-	read -r -p "请手动输入：" VER
-	FRPTAR="frp_${VER}_linux_${ARCH}.tar.gz"
-	FRPURL="${FRPFILE}/v${VER}/${FRPTAR}"
-
-	echo -e "\e[32m开始下载$FRPTAR\e[0m"
-	curl -L $FRPURL -o $FRPTAR
 fi
 
-# 解压
 if [ -s $FRPTAR ]; then
-    echo -e "\e[32m开始提取$FRPTAR\e[0m"
+    echo -e "\e[32m提取$FRPTAR\e[0m"
 	mkdir -p $FRPPATH
 	tar xzvf $FRPTAR
 	mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
 	rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH} 
 else
-    echo -e "\e[31m没有找到文件！\e[0m"
+    echo -e "\e[31m未找到文件！\e[0m"
 	read -r -p "请输入链接：" FRPURL
-	echo -e "\e[32m开始下载$FRPTAR\e[0m"
+	echo -e "\e[32m下载$FRPTAR\e[0m"
 	curl -L $FRPURL -o $FRPTAR
-
-	echo -e "\e[32m开始提取$FRPTAR\e[0m"
+	echo -e "\e[32m提取$FRPTAR\e[0m"
 	mkdir -p $FRPPATH
 	tar xzvf $FRPTAR
 	mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
 	rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH}
 fi
 
-# 令牌
 if [ ! -s /lib/systemd/system/frps.service ]; then
 read -r -p "请输入USERNAME：" USERNAME
 read -r -p "请输入PASSWORD：" PASSWORD
