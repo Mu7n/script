@@ -313,17 +313,15 @@ while ! test -z $(ps -ef | grep frps | grep -v grep); do
     pkill -9 frps
 done
 
-VER=$(curl -s $FRPAPI | grep '"tag_name":' | cut -d '"' -f 4 | cut -c 2-)
-if [ ! -z $VER ]; then
-    FRPTAR="frp_${VER}_linux_${ARCH}.tar.gz"
-	FRPURL="${FRPFILE}/v${VER}/${FRPTAR}"
-	echo -e "\e[32m下载$FRPTAR\e[0m"
-	curl -L $FRPURL -o $FRPTAR
-else
-    echo -e "\e[31m获取版本失败！\e[0m"
-fi
-
-if [ -s $FRPTAR ]; then
+# 
+if [ ! -s ${FRPPATH}/frps.toml ]; then
+    VER=$(curl -s $FRPAPI | grep '"tag_name":' | cut -d '"' -f 4 | cut -c 2-)
+	if [ ! -z $VER ]; then
+	    FRPTAR="frp_${VER}_linux_${ARCH}.tar.gz"
+		FRPURL="${FRPFILE}/v${VER}/${FRPTAR}"
+		echo -e "\e[32m下载$FRPTAR\e[0m"
+		curl -L $FRPURL -o $FRPTAR
+		if [ -s $FRPTAR ]; then
     echo -e "\e[32m提取$FRPTAR\e[0m"
 	mkdir -p $FRPPATH
 	tar xzvf $FRPTAR
