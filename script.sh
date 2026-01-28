@@ -459,9 +459,9 @@ FRPS
 
 # 启动
 chown root:root -R $FRPPATH && chmod 755 $FRPPATH
-sudo systemctl daemon-reload
-sudo systemctl start frps
-sudo systemctl enable frps
+systemctl daemon-reload
+systemctl start frps
+systemctl enable frps
 fi
 
 # SSH
@@ -489,6 +489,7 @@ sudo ufw allow 7500
 sudo ufw enable | echo "y"
 
 echo -e "\e[31m如有问题输入systemctl start ssh && systemctl enable ssh && systemctl restart sshd(.service)\e[0m"
-sudo systemctl restart sshd
+systemctl restart sshd
 fi
+
 echo -e "\e[35mEND！\e[0m"
