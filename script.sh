@@ -365,6 +365,7 @@ if [ -s ${FRPPATH}/frps ]; then
 			    echo -e "\e[31m错误，请重新输入！\e[0m"
 				continue
 				;;
+		esac
 	done
 else
     if [ ! -z $VER ]; then
