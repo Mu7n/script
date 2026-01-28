@@ -493,3 +493,5 @@ systemctl restart sshd
 fi
 
 echo -e "\e[35mEND！\e[0m"
+service frps status
+service sshd status
