@@ -345,9 +345,9 @@ if [ -s ${FRPPATH}/frps ]; then
 				read -r -p "请输入USERNAME：" USERNAME
 				read -r -p "请输入PASSWORD：" PASSWORD
 				TOKEN="${USERNAME}${PASSWORD}"
-				echo -e "TOKEN：\e[35m$TOKEN\e[0m"
 				while true; do
-				    read -r -p "请确认令牌[Yes/No]：" input
+				    echo -e "TOKEN：\e[35m$TOKEN\e[0m"
+					read -r -p "请确认令牌[Yes/No]：" input
 					case $input in
 					    [yY][eE][sS]|[yY]) echo -e "\e[35m已确认。\e[0m" ; TOML=TOML ; break ;;
 						[nN][oO]|[nN]) echo -e "\e[32m请重新输入。\e[0m" ; read -r -p "请输入USERNAME：" USERNAME ; read -r -p "请输入PASSWORD：" PASSWORD ;;
@@ -391,9 +391,9 @@ else
 	read -r -p "请输入USERNAME：" USERNAME
 	read -r -p "请输入PASSWORD：" PASSWORD
 	TOKEN="${USERNAME}${PASSWORD}"
-	echo -e "TOKEN：\e[35m$TOKEN\e[0m"
 	while true; do
-	    read -r -p "请确认令牌[Yes/No]：" input
+	    echo -e "TOKEN：\e[35m$TOKEN\e[0m"
+		read -r -p "请确认令牌[Yes/No]：" input
 		case $input in
 		    [yY][eE][sS]|[yY]) echo -e "\e[35m已确认。\e[0m" ; TOML=TOML ; break ;;
 			[nN][oO]|[nN]) echo -e "\e[32m请重新输入。\e[0m" ; read -r -p "请输入USERNAME：" USERNAME ; read -r -p "请输入PASSWORD：" PASSWORD ;;
@@ -486,12 +486,12 @@ sudo ufw allow $sshport
 sudo ufw allow 443
 sudo ufw allow 7000
 sudo ufw allow 7500
-sudo ufw enable | echo "y"
+sudo ufw enable
 
 echo -e "\e[31m如有问题输入systemctl start ssh && systemctl enable ssh && systemctl restart sshd(.service)\e[0m"
 systemctl restart sshd
 fi
 
-echo -e "\e[35mEND！\e[0m"
 service frps status
 service sshd status
+echo -e "\e[35mEND！\e[0m"
