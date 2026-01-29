@@ -482,11 +482,11 @@ SSHD
 
 # 防火墙
 #iptables -A INPUT -p tcp --dport $sshport -j ACCEPT
-sudo ufw allow $sshport
-sudo ufw allow 443
-sudo ufw allow 7000
-sudo ufw allow 7500
-sudo ufw enable
+ufw allow $sshport
+ufw allow 443
+ufw allow 7000
+ufw allow 7500
+echo "y" | ufw enable
 
 echo -e "\e[31m如有问题输入systemctl start ssh && systemctl enable ssh && systemctl restart sshd(.service)\e[0m"
 systemctl restart sshd
