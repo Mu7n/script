@@ -34,7 +34,24 @@ cyan(){ echo -e "\e[36m$1\e[0m";}
 readp(){ read -p "$(cyan "$1")" $2;}
 
 purple "\nMu"
-set -u
+set -ue
+
+# 关闭SELINUX
+#if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then; sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config; setenforce 0; fi
+
+# 检查系统
+arch=$(uname -m)
+case $arch in
+    x86_64)        Is_64bit='y'; ARCH="amd64";;
+    aarch64)       Is_64bit='y'; ARCH="arm64";;
+    arm*|armv*)    Is_64bit='n'; ARCH="arm";;
+    mips)          Is_64bit='n'; ARCH="mips";;
+    mips64)        Is_64bit='y'; ARCH="mips64";;
+    mips64el)      Is_64bit='y'; ARCH="mips64le";;
+    mipsel)        Is_64bit='n'; ARCH="mipsle";;
+    riscv64)       Is_64bit='y'; ARCH="riscv64";;
+    *)             echo "未知系统！";;
+esac
 
 readdomain(){
 readp "请输入域名：" domain
@@ -59,22 +76,21 @@ while true; do
 done
 }
 
-# 关闭SELINUX
-#if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then; sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config; setenforce 0; fi
-
-# 检查系统
-arch=$(uname -m)
-case $arch in
-    x86_64)        Is_64bit='y'; ARCH="amd64";;
-    aarch64)       Is_64bit='y'; ARCH="arm64";;
-    arm*|armv*)    Is_64bit='n'; ARCH="arm";;
-    mips)          Is_64bit='n'; ARCH="mips";;
-    mips64)        Is_64bit='y'; ARCH="mips64";;
-    mips64el)      Is_64bit='y'; ARCH="mips64le";;
-    mipsel)        Is_64bit='n'; ARCH="mipsle";;
-    riscv64)       Is_64bit='y'; ARCH="riscv64";;
-    *)             echo "未知系统！";;
+readtoken(){
+readp "请输入username：" USERNAME
+readp "请输入password：" PASSWORD
+TOKEN="${USERNAME}${PASSWORD}"
+purple "TOKEN：$TOKEN"
+while true; do
+readp "请确认令牌[Yes/No]：" INPUT
+case $INPUT in
+[yY][eE][sS]|[yY]) purple "已确认。" ; break ;;
+[nN][oO]|[nN]) bule "请重新输入。" ; readp "请输入username：" USERNAME ; readp "请输入password：" PASSWORD ; TOKEN="${USERNAME}${PASSWORD}" ; purple "TOKEN：$TOKEN" ;;
+*) readp "错误，请重新输入！" ; continue ;;
 esac
+done
+}
+
 
 # Nginx
 if [ ! -s /etc/nginx/Mu ]; then
@@ -187,16 +203,7 @@ while true; do
 			;;
 		2)
 		    echo -e "\e[32m重新申请SSL证书。\e[0m"
-			read -r -p "请输入域名：" domain
-			echo -e "域名：\e[35m$domain\e[0m"
-			while true; do
-			    read -r -p "请确认域名[Yes/No]：" input
-				case $input in
-				    [yY][eE][sS]|[yY]) echo -e "\e[35m已确认。\e[0m" ; break ;;
-					[nN][oO]|[nN]) echo -e "\e[32m请重新输入。\e[0m" ; read -r -p "请输入域名：" domain ; echo -e "域名：\e[35m$domain\e[0m" ;;
-					*) echo -e "\e[31m错误，请重新输入！\e[0m" ; continue ;;
-				esac
-			done
+			readdomain
 			rm -rf /etc/letsencrypt/{live,renewal,archive}
 			rm -rf /etc/nginx/conf.d/FLO.conf
 			echo -e "\e[32m申请SSL证书。\e[0m"
@@ -215,7 +222,7 @@ while true; do
 done
 fi
 
-# 配置
+# nginxconfig(){}
 if [ ! -s /etc/nginx/conf.d/FLO.conf ]; then
 # FLO.conf
 cat > /etc/nginx/conf.d/FLO.conf << FLO
@@ -351,18 +358,7 @@ if [ ! -s ${FRPPATH}/frps ]; then
 		mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
 		rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH}
 	fi
-	read -r -p "请输入USERNAME：" USERNAME
-	read -r -p "请输入PASSWORD：" PASSWORD
-	TOKEN="${USERNAME}${PASSWORD}"
-	echo -e "TOKEN：\e[35m$TOKEN\e[0m"
-	while true; do
-	    read -r -p "请确认令牌[Yes/No]：" input
-		case $input in
-		    [yY][eE][sS]|[yY]) echo -e "\e[35m已确认。\e[0m" ; break ;;
-			[nN][oO]|[nN]) echo -e "\e[32m请重新输入。\e[0m" ; read -r -p "请输入USERNAME：" USERNAME ; read -r -p "请输入PASSWORD：" PASSWORD ; TOKEN="${USERNAME}${PASSWORD}" ; echo -e "TOKEN：\e[35m$TOKEN\e[0m" ;;
-			*) echo -e "\e[31m错误，请重新输入！\e[0m" ; continue ;;
-		esac
-	done
+    readtoken
 else
     while true; do
 	    echo -e "\e[32m检测到已安装frps。\e[0m"
@@ -392,18 +388,7 @@ else
 					mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
 					rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH}
 				fi
-				read -r -p "请输入USERNAME：" USERNAME
-				read -r -p "请输入PASSWORD：" PASSWORD
-				TOKEN="${USERNAME}${PASSWORD}"
-				echo -e "TOKEN：\e[35m$TOKEN\e[0m"
-				while true; do
-				    read -r -p "请确认令牌[Yes/No]：" input
-					case $input in
-					    [yY][eE][sS]|[yY]) echo -e "\e[35m已确认。\e[0m" ; rm -rf ${FRPPATH}/frps.toml ; break ;;
-						[nN][oO]|[nN]) echo -e "\e[32m请重新输入。\e[0m" ; read -r -p "请输入USERNAME：" USERNAME ; read -r -p "请输入PASSWORD：" PASSWORD ; TOKEN="${USERNAME}${PASSWORD}" ; echo -e "TOKEN：\e[35m$TOKEN\e[0m" ;;
-						*) echo -e "\e[31m错误，请重新输入！\e[0m" ; continue ;;
-					esac
-				done
+				readtoken
 				break
 				;;
 			2)
