@@ -24,10 +24,16 @@
 #if [ ! -s 文件]；如果文件不存在或size等于0
 #if [ -z $string]；如果变量等于0或空)
 #if [ ! -z $string]；如果变量大于0或非空
-#命令 > /dev/null 2>&1；正确信息和错误信息输出到/dev/null；不显示到屏幕
-#命令 2> /dev/null；错误信息输出到/dev/null；正确信息显示到屏幕
+#命令 >/dev/null；正确信息输出到/dev/null；错误信息显示到屏幕
+#命令 2>/dev/null；错误信息输出到/dev/null；正确信息显示到屏幕
 
-echo -e "\e[35m\nMu\e[0m"
+blue(){ echo -e "\e[34m$1\e[0m";}
+red(){ echo -e "\e[31m$1\e[0m";}
+green(){ echo -e "\e[32m$1\e[0m";}
+purple(){ echo -e "\e[35m$1\e[0m";}
+readp(){ read -p "$(\e[36m"$1"\e[0m)" $2;}
+
+purple "\nMu"
 set -u
 
 # 关闭SELINUX
@@ -136,7 +142,7 @@ fi
 
 # SSL
 if [ ! -s /etc/letsencrypt/live ]; then
-    read -r -p "请输入域名：" domain
+    readp "请输入域名：" domain
 	echo -e "域名：\e[35m$domain\e[0m"
 	while true; do
 	    read -r -p "请确认域名[Yes/No]：" input
@@ -165,7 +171,7 @@ else
 		echo -e "\e[32m1、强制申请\e[0m"
 		echo -e "\e[32m2、更改域名\e[0m"
 		echo -e "\e[32m3、跳过申请\e[0m"
-		read -p "请输入选项：" OPTION
+		readp "请输入选项：" OPTION
 		case $OPTION in
 		    1)
 			    echo -e "\e[32m强制申请SSL证书。\e[0m"
