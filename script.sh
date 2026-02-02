@@ -56,7 +56,7 @@ esac
 readdomain(){
     readp "请输入域名：" domain
     purple "域名：$domain"
-    while true; do readp "请确认域名[Yes/No]：" input; case $input in [yY][eE][sS]|[yY]) purple "已确认。";nginxconfig; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入域名：" domain; purple "域名：$domain";; *) red "错误，请重新输入！"; continue;; esac done
+    while true; do readp "请确认域名[Yes/No]：" input; case $input in [yY][eE][sS]|[yY]) purple "已确认。"; nginxconfig; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入域名：" domain; purple "域名：$domain";; *) red "错误，请重新输入！"; continue;; esac done
 }
 
 readtoken(){
