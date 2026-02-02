@@ -310,9 +310,7 @@ else
 		blue "2、退出"
 		readp "请输入选项：" OPTION
 		case $OPTION in
-		    1) if [ ! -z $VER ]; then frptargz; readtoken fi; break;;
-			2) echo -e "\e[32m退出。\e[0m"; break;;
-			*) echo -e "\e[31m错误，请重新输入！\e[0m"; continue;;
+		    1) if [ ! -z $VER ]; then frptargz; readtoken fi break;; 2) echo -e "\e[32m退出。\e[0m"; break;; *) echo -e "\e[31m错误，请重新输入！\e[0m"; continue;;
 		esac
 	done
 fi
