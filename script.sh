@@ -31,7 +31,7 @@ red(){ echo -e "\e[31m$1\e[0m";}
 blue(){ echo -e "\e[34m$1\e[0m";}
 purple(){ echo -e "\e[35m$1\e[0m";}
 cyan(){ echo -e "\e[36m$1\e[0m";}
-readp(){ read -p "$(cyan "$1")\n" $2;}
+readp(){ read -p "$(cyan "$1"\n)" $2;}
 
 purple "\nMu"
 set -ue
