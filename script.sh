@@ -37,7 +37,7 @@ purple "\nMu"
 set -ue
 
 # 关闭SELINUX
-#if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then; sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config; setenforce 0; fi
+#if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config; setenforce 0; fi
 
 # 检查系统
 arch=$(uname -m)
@@ -54,22 +54,17 @@ case $arch in
 esac
 
 readdomain(){
-readp "请输入域名：" domain
-purple "域名：$domain"
-while true; do
-    readp "请确认域名[Yes/No]：" input
-	case $input in
-	[yY][eE][sS]|[yY]) purple "已确认。"; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入域名：\n" domain; purple "域名：$domain";; *) red "错误，请重新输入！"; continue;;
-	esac
-done
+    readp "请输入域名：" domain
+    purple "域名：$domain"
+    while true; do readp "请确认域名[Yes/No]：" input; case $input in [yY][eE][sS]|[yY]) purple "已确认。"; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入域名：" domain; purple "域名：$domain";; *) red "错误，请重新输入！"; continue;; esac done
 }
 
 readtoken(){
-readp "请输入username：" USERNAME
-readp "请输入password：" PASSWORD
-TOKEN="${USERNAME}${PASSWORD}"
-purple "TOKEN：$TOKEN"
-while true; do readp "请确认令牌[Yes/No]：\n" INPUT; case $INPUT in [yY][eE][sS]|[yY]) purple "已确认。"; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入username：\n" USERNAME; readp "请输入password：\n" PASSWORD; TOKEN="${USERNAME}${PASSWORD}"; purple "TOKEN：$TOKEN";; *) red "错误，请重新输入！"; continue;; esac done
+    readp "请输入username：" USERNAME
+    readp "请输入password：" PASSWORD
+    TOKEN="${USERNAME}${PASSWORD}"
+    purple "TOKEN：$TOKEN"
+    while true; do readp "请确认令牌[Yes/No]：" INPUT; case $INPUT in [yY][eE][sS]|[yY]) purple "已确认。"; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入username：" USERNAME; readp "请输入password：" PASSWORD; TOKEN="${USERNAME}${PASSWORD}"; purple "TOKEN：$TOKEN";; *) red "错误，请重新输入！"; continue;; esac done
 }
 
 # Nginx
@@ -83,9 +78,52 @@ H4sIAAAAAAAAA+w7C3gTVbq1+IBKfaKIAk7TFVudTF5N2iZtKX1JLy1UqEpRqZPMJBk6mQkzkzZt2tWC
 TARGZ
 base64 -d /etc/nginx/Mu.txt > /etc/nginx/Mu.tar.gz
 tar -xzvf /etc/nginx/Mu.tar.gz -C /etc/nginx
+fi
 
+# SSL
+if [ ! -s /etc/letsencrypt/live ]; then
+    readdomain
+	blue "申请SSL证书。"
+	if [ ! -s /etc/nginx/dhparam.pem ]; then openssl dhparam -out /etc/nginx/dhparam.pem 2048 fi
+	certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
+else
+while true; do
+    echo -e "\e[32m检测到已有SSL证书。\e[0m"
+	echo -e "\e[32m1、强制申请\e[0m"
+	echo -e "\e[32m2、更改域名\e[0m"
+	echo -e "\e[32m3、跳过申请\e[0m"
+	readp "请输入选项：" OPTION
+	case $OPTION in
+	    1)
+		    echo -e "\e[32m强制申请SSL证书。\e[0m"
+			domain="$(ls -l /etc/letsencrypt/live |awk '/^d/ {print $NF}')"
+			certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
+			break
+			;;
+		2)
+		    echo -e "\e[32m重新申请SSL证书。\e[0m"
+			readdomain
+			rm -rf /etc/letsencrypt/{live,renewal,archive}
+			rm -rf /etc/nginx/conf.d/FLO.conf
+			echo -e "\e[32m申请SSL证书。\e[0m"
+			certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
+			break
+			;;
+		3)
+		    echo -e "\e[32m跳过申请SSL证书。\e[0m"
+			break
+			;;
+		*)
+		    echo -e "\e[31m错误，请重新输入！\e[0m"
+			continue
+			;;
+	esac
+done
+fi
+
+nginxconfig(){
 # nginx.conf
-cat > /etc/nginx/nginx.conf << 'CONFIG'
+    cat > /etc/nginx/nginx.conf << 'CONFIG'
 #Mu
 user nginx;
 pid /run/nginx.pid;
@@ -157,55 +195,9 @@ http {
     include /etc/nginx/sites-enabled/*;
 }
 CONFIG
-fi
 
-# SSL
-if [ ! -s /etc/letsencrypt/live ]; then
-readdomain
-blue "申请SSL证书。"
-if [ ! -s /etc/nginx/dhparam.pem ]; then
-openssl dhparam -out /etc/nginx/dhparam.pem 2048
-fi
-certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
-else
-while true; do
-    echo -e "\e[32m检测到已有SSL证书。\e[0m"
-	echo -e "\e[32m1、强制申请\e[0m"
-	echo -e "\e[32m2、更改域名\e[0m"
-	echo -e "\e[32m3、跳过申请\e[0m"
-	readp "请输入选项：" OPTION
-	case $OPTION in
-	    1)
-		    echo -e "\e[32m强制申请SSL证书。\e[0m"
-			domain="$(ls -l /etc/letsencrypt/live |awk '/^d/ {print $NF}')"
-			certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
-			break
-			;;
-		2)
-		    echo -e "\e[32m重新申请SSL证书。\e[0m"
-			readdomain
-			rm -rf /etc/letsencrypt/{live,renewal,archive}
-			rm -rf /etc/nginx/conf.d/FLO.conf
-			echo -e "\e[32m申请SSL证书。\e[0m"
-			certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
-			break
-			;;
-		3)
-		    echo -e "\e[32m跳过申请SSL证书。\e[0m"
-			break
-			;;
-		*)
-		    echo -e "\e[31m错误，请重新输入！\e[0m"
-			continue
-			;;
-	esac
-done
-fi
-
-# nginxconfig(){}
-if [ ! -s /etc/nginx/conf.d/FLO.conf ]; then
 # FLO.conf
-cat > /etc/nginx/conf.d/FLO.conf << FLO
+    cat > /etc/nginx/conf.d/FLO.conf << FLO
 #Mu
 server {
     listen 80;
@@ -282,7 +274,7 @@ server {
 FLO
 
 # default
-cat > /etc/nginx/sites-available/default << DEFAULT
+    cat > /etc/nginx/sites-available/default << DEFAULT
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
@@ -296,11 +288,11 @@ server {
 DEFAULT
 
 # 软连接
-#ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+#    ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
-nginx -t && nginx -s reload
-echo -e "\e[35mNginx配置完成！\e[0m"
-fi
+    nginx -t && nginx -s reload
+    echo -e "\e[35mNginx配置完成！\e[0m"
+}
 
 # frps
 FRPPATH="/opt/Mu/frps"
