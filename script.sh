@@ -59,7 +59,7 @@ purple "域名：$domain"
 while true; do
     readp "请确认域名[Yes/No]：" input
 	case $input in
-	[yY][eE][sS]|[yY]) purple "已确认。" ; break ;; [nN][oO]|[nN]) blue "请重新输入。" ; readp "请输入域名：" domain ; purple "域名：$domain" ;; *) red "错误，请重新输入！" ; continue ;;
+	[yY][eE][sS]|[yY]) purple "已确认。"; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入域名：\n" domain; purple "域名：$domain";; *) red "错误，请重新输入！"; continue;;
 	esac
 done
 }
@@ -69,12 +69,7 @@ readp "请输入username：" USERNAME
 readp "请输入password：" PASSWORD
 TOKEN="${USERNAME}${PASSWORD}"
 purple "TOKEN：$TOKEN"
-while true; do
-readp "请确认令牌[Yes/No]：" INPUT
-case $INPUT in
-[yY][eE][sS]|[yY]) purple "已确认。" ; break ;; [nN][oO]|[nN]) blue "请重新输入。" ; readp "请输入username：" USERNAME ; readp "请输入password：" PASSWORD ; TOKEN="${USERNAME}${PASSWORD}" ; purple "TOKEN：$TOKEN" ;; *) red "错误，请重新输入！" ; continue ;;
-esac
-done
+while true; do; readp "请确认令牌[Yes/No]：\n" INPUT; case $INPUT in; [yY][eE][sS]|[yY]) purple "已确认。"; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入username：\n" USERNAME; readp "请输入password：\n" PASSWORD; TOKEN="${USERNAME}${PASSWORD}"; purple "TOKEN：$TOKEN";; *) red "错误，请重新输入！"; continue;; esac; done
 }
 
 # Nginx
