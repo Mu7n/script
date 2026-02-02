@@ -56,7 +56,7 @@ esac
 readdomain(){
     readp "请输入域名：" domain
     purple "域名：$domain"
-    while true; do readp "请确认域名[Yes/No]：" input; case $input in [yY][eE][sS]|[yY]) purple "已确认。"; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入域名：" domain; purple "域名：$domain";; *) red "错误，请重新输入！"; continue;; esac done
+    while true; do readp "请确认域名[Yes/No]：" input; case $input in [yY][eE][sS]|[yY]) purple "已确认。";nginxconfig; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入域名：" domain; purple "域名：$domain";; *) red "错误，请重新输入！"; continue;; esac done
 }
 
 readtoken(){
@@ -87,38 +87,19 @@ if [ ! -s /etc/letsencrypt/live ]; then
 	if [ ! -s /etc/nginx/dhparam.pem ]; then openssl dhparam -out /etc/nginx/dhparam.pem 2048 fi
 	certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
 else
-while true; do
-    echo -e "\e[32m检测到已有SSL证书。\e[0m"
-	echo -e "\e[32m1、强制申请\e[0m"
-	echo -e "\e[32m2、更改域名\e[0m"
-	echo -e "\e[32m3、跳过申请\e[0m"
-	readp "请输入选项：" OPTION
-	case $OPTION in
-	    1)
-		    echo -e "\e[32m强制申请SSL证书。\e[0m"
-			domain="$(ls -l /etc/letsencrypt/live |awk '/^d/ {print $NF}')"
-			certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
-			break
-			;;
-		2)
-		    echo -e "\e[32m重新申请SSL证书。\e[0m"
-			readdomain
-			rm -rf /etc/letsencrypt/{live,renewal,archive}
-			rm -rf /etc/nginx/conf.d/FLO.conf
-			echo -e "\e[32m申请SSL证书。\e[0m"
-			certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
-			break
-			;;
-		3)
-		    echo -e "\e[32m跳过申请SSL证书。\e[0m"
-			break
-			;;
-		*)
-		    echo -e "\e[31m错误，请重新输入！\e[0m"
-			continue
-			;;
-	esac
-done
+    while true; do
+	    purple "检测到已有SSL证书。"
+		blue "1、强制申请"
+		blue "2、更改域名"
+		blue "3、跳过申请"
+		readp "请输入选项：" OPTION
+		case $OPTION in
+	    1) blue "强制申请SSL证书。"; domain="$(ls -l /etc/letsencrypt/live |awk '/^d/ {print $NF}')"; certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain; break;;
+		2) blue "重新申请SSL证书。"; rm -rf /etc/letsencrypt/{live,renewal,archive}; rm -rf /etc/nginx/conf.d/FLO.conf; readdomain; blue "申请SSL证书。"; certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain; break;;
+		3) blue "跳过申请SSL证书。"; break;;
+		*) red "错误，请重新输入！"; continue;;
+		esac
+	done
 fi
 
 nginxconfig(){
@@ -300,6 +281,18 @@ FRPFILE="https://github.com/fatedier/frp/releases/download"
 FRPAPI="https://api.github.com/repos/fatedier/frp/releases/latest"
 VER="$(curl -s $FRPAPI | grep '"tag_name":' | cut -d '"' -f 4 | cut -c 2-)"
 
+frptargz(){
+    FRPTAR="frp_${VER}_linux_${ARCH}.tar.gz"
+	FRPURL="${FRPFILE}/v${VER}/${FRPTAR}"
+	blue "下载$FRPTAR"
+	curl -L $FRPURL -o $FRPTAR
+	blue "提取$FRPTAR"
+	mkdir -p $FRPPATH
+	tar xzvf $FRPTAR
+	mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
+	rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH}
+}
+
 # 关闭进程
 GREP="$(ps -ef | grep frps | grep -v grep | awk '{print $8}')"
 #if [ ${FRPPATH}/frps == $GREP ]; then
@@ -309,68 +302,17 @@ fi
 
 # 认证
 if [ ! -s ${FRPPATH}/frps ]; then
-    if [ ! -z $VER ]; then
-	    FRPTAR="frp_${VER}_linux_${ARCH}.tar.gz"
-		FRPURL="${FRPFILE}/v${VER}/${FRPTAR}"
-		echo -e "\e[32m下载$FRPTAR\e[0m"
-		curl -L $FRPURL -o $FRPTAR
-	    echo -e "\e[32m提取$FRPTAR\e[0m"
-		mkdir -p $FRPPATH
-		tar xzvf $FRPTAR
-		mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
-		rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH}
-	else
-	    echo -e "\e[31m未找到文件！\e[0m"
-		read -r -p "请输入链接：" FRPURL
-		echo -e "\e[32m下载$FRPTAR\e[0m"
-		curl -L $FRPURL -o $FRPTAR
-		echo -e "\e[32m提取$FRPTAR\e[0m"
-		mkdir -p $FRPPATH
-		tar xzvf $FRPTAR
-		mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
-		rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH}
-	fi
-    readtoken
+    if [ ! -z $VER ]; then frptargz; readtoken fi
 else
     while true; do
-	    echo -e "\e[32m检测到已安装frps。\e[0m"
-		echo -e "\e[32m1、升级\e[0m"
-		echo -e "\e[32m2、退出\e[0m"
-		read -p "请输入选项：" OPTION
+	    purple "检测到已安装frps。"
+		blue "1、升级"
+		blue "2、退出"
+		readp "请输入选项：" OPTION
 		case $OPTION in
-		    1)
-			    if [ ! -z $VER ]; then
-				    FRPTAR="frp_${VER}_linux_${ARCH}.tar.gz"
-					FRPURL="${FRPFILE}/v${VER}/${FRPTAR}"
-					echo -e "\e[32m下载$FRPTAR\e[0m"
-					curl -L $FRPURL -o $FRPTAR
-					echo -e "\e[32m提取$FRPTAR\e[0m"
-					mkdir -p $FRPPATH
-					tar xzvf $FRPTAR
-					mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
-					rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH}
-				else
-				    echo -e "\e[31m未获取！\e[0m"
-					read -r -p "请输入链接：" FRPURL
-					echo -e "\e[32m下载$FRPTAR\e[0m"
-					curl -L $FRPURL -o $FRPTAR
-					echo -e "\e[32m提取$FRPTAR\e[0m"
-					mkdir -p $FRPPATH
-					tar xzvf $FRPTAR
-					mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
-					rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH}
-				fi
-				readtoken
-				break
-				;;
-			2)
-			    echo -e "\e[32m退出。\e[0m"
-				break
-				;;
-			*)
-			    echo -e "\e[31m错误，请重新输入！\e[0m"
-				continue
-				;;
+		    1) if [ ! -z $VER ]; then frptargz; readtoken fi; break;;
+			2) echo -e "\e[32m退出。\e[0m"; break;;
+			*) echo -e "\e[31m错误，请重新输入！\e[0m"; continue;;
 		esac
 	done
 fi
