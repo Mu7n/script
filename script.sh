@@ -50,7 +50,7 @@ case $arch in
     mips64el)      Is_64bit='y'; ARCH="mips64le";;
     mipsel)        Is_64bit='n'; ARCH="mipsle";;
     riscv64)       Is_64bit='y'; ARCH="riscv64";;
-    *)             echo "未知系统！";;
+    *)             red "未知系统！";;
 esac
 
 readdomain(){
@@ -59,19 +59,9 @@ purple "域名：$domain"
 while true; do
     readp "请确认域名[Yes/No]：" input
 	case $input in
-	    [yY][eE][sS]|[yY])
-		purple "已确认。"
-		break
-		;;
-		[nN][oO]|[nN])
-		blue "请重新输入。"
-		readp "请输入域名：" domain
-		purple "域名：$domain"
-		;;
-		*)
-		red "错误，请重新输入！"
-		continue
-		;;
+	[yY][eE][sS]|[yY])    purple "已确认。" ; break ;;
+	[nN][oO]|[nN])        blue "请重新输入。" ; readp "请输入域名：" domain ; purple "域名：$domain" ;;
+	*)                    red "错误，请重新输入！" ; continue ;;
 	esac
 done
 }
@@ -84,13 +74,10 @@ purple "TOKEN：$TOKEN"
 while true; do
 readp "请确认令牌[Yes/No]：" INPUT
 case $INPUT in
-[yY][eE][sS]|[yY]) purple "已确认。" ; break ;;
-[nN][oO]|[nN]) bule "请重新输入。" ; readp "请输入username：" USERNAME ; readp "请输入password：" PASSWORD ; TOKEN="${USERNAME}${PASSWORD}" ; purple "TOKEN：$TOKEN" ;;
-*) red "错误，请重新输入！" ; continue ;;
+[yY][eE][sS]|[yY]) purple "已确认。" ; break ;; [nN][oO]|[nN]) bule "请重新输入。" ; readp "请输入username：" USERNAME ; readp "请输入password：" PASSWORD ; TOKEN="${USERNAME}${PASSWORD}" ; purple "TOKEN：$TOKEN" ;; *) red "错误，请重新输入！" ; continue ;;
 esac
 done
 }
-
 
 # Nginx
 if [ ! -s /etc/nginx/Mu ]; then
