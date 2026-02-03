@@ -137,22 +137,14 @@ CONFIG
     cat > /etc/nginx/conf.d/FLO.conf << FLO
 #Mu
 server {
-    listen 80;
-    listen [::]:80;
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
     server_name $domain;
     root /etc/nginx/Mu;
-    return 301 https://$domain\$request_uri;
 
     # SSL
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
-
-    # Root
-    location / {
-        root /etc/nginx/Mu;
-    }
 
     # Reverse proxy
     location /frp {
@@ -201,9 +193,11 @@ server {
 
 # subdomains redirect
 server {
+	listen 80;
+    listen [::]:80;
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name $domain;
+    server_name .$domain;
     return 301 https://$domain\$request_uri;
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
