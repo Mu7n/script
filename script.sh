@@ -37,7 +37,7 @@ purple "\nMu"
 set -ue
 
 # 关闭SELINUX
-#if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config; setenforce 0; fi
+#if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then; sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config; setenforce 0; fi
 
 # 检查系统
 arch=$(uname -m)
@@ -84,7 +84,7 @@ fi
 if [ ! -s /etc/letsencrypt/live ]; then
     readdomain
 	blue "申请SSL证书。"
-	if [ ! -s /etc/nginx/dhparam.pem ]; then openssl dhparam -out /etc/nginx/dhparam.pem 2048 fi
+	if [ ! -s /etc/nginx/dhparam.pem ]; then; openssl dhparam -out /etc/nginx/dhparam.pem 2048; fi
 	certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
 else
     while true; do
@@ -309,9 +309,7 @@ else
 		blue "1、升级"
 		blue "2、退出"
 		readp "请输入选项：" OPTION
-		case $OPTION in
-		    1) if [ ! -z $VER ]; then frptargz; readtoken fi; break;; 2) echo -e "\e[32m退出。\e[0m"; break;; *) echo -e "\e[31m错误，请重新输入！\e[0m"; continue;;
-		esac
+		case $OPTION in 1) if [ ! -z $VER ]; then; frptargz; readtoken; fi; break;; 2) echo -e "\e[32m退出。\e[0m"; break;; *) echo -e "\e[31m错误，请重新输入！\e[0m"; continue;; esac
 	done
 fi
 
