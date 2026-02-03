@@ -60,16 +60,24 @@ esac
 
 readdomain(){
     readp "请输入域名：" domain
-    purple "域名：$domain"
-    while true; do readp "请确认域名[Yes/No]：" input; case $input in [yY][eE][sS]|[yY]) purple "已确认。"; nginxconfig; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入域名：" domain; purple "域名：$domain";; *) red "错误，请重新输入！"; continue;; esac done
+	purple "域名：$domain"
+	while true; do readp "请确认域名[Yes/No]：" input; case $input in [yY][eE][sS]|[yY]) purple "已确认。"; nginxconfig; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入域名：" domain; purple "域名：$domain";; *) red "错误，请重新输入！"; continue;; esac done
+}
+
+certssl(){
+    blue "申请SSL证书。"
+	if [ ! -s /etc/nginx/dhparam.pem ]; then openssl dhparam -out /etc/nginx/dhparam.pem 2048; fi
+	certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
+	nginx -t && nginx -s reload
+	purple "Nginx配置完成！"
 }
 
 readtoken(){
     readp "请输入username：" USERNAME
-    readp "请输入password：" PASSWORD
-    TOKEN="${USERNAME}${PASSWORD}"
-    purple "TOKEN：$TOKEN"
-    while true; do readp "请确认令牌[Yes/No]：" INPUT; case $INPUT in [yY][eE][sS]|[yY]) purple "已确认。"; frpsconfig; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入username：" USERNAME; readp "请输入password：" PASSWORD; TOKEN="${USERNAME}${PASSWORD}"; purple "TOKEN：$TOKEN";; *) red "错误，请重新输入！"; continue;; esac done
+	readp "请输入password：" PASSWORD
+	TOKEN="${USERNAME}${PASSWORD}"
+	purple "TOKEN：$TOKEN"
+	while true; do readp "请确认令牌[Yes/No]：" INPUT; case $INPUT in [yY][eE][sS]|[yY]) purple "已确认。"; frpsconfig; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入username：" USERNAME; readp "请输入password：" PASSWORD; TOKEN="${USERNAME}${PASSWORD}"; purple "TOKEN：$TOKEN";; *) red "错误，请重新输入！"; continue;; esac done
 }
 
 frptargz(){
@@ -83,6 +91,13 @@ frptargz(){
 	if [ ! -z $GREP ]; then pkill -9 frps; fi
 	mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
 	rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH}
+}
+
+frpserver(){
+    chown root:root -R $FRPPATH && chmod 755 $FRPPATH
+	systemctl daemon-reload
+	systemctl start frps
+	systemctl enable frps
 }
 
 # Nginx
@@ -101,9 +116,7 @@ fi
 # SSL
 if [ ! -s /etc/letsencrypt/live ]; then
     readdomain
-	blue "申请SSL证书。"
-	if [ ! -s /etc/nginx/dhparam.pem ]; then openssl dhparam -out /etc/nginx/dhparam.pem 2048; fi
-	certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain
+	certssl
 else
     while true; do
 	    purple "检测到已有SSL证书。"
@@ -112,8 +125,8 @@ else
 		blue "3、跳过申请"
 		readp "请输入选项：" OPTION
 		case $OPTION in
-	    1) blue "强制申请SSL证书。"; domain="$(ls -l /etc/letsencrypt/live |awk '/^d/ {print $NF}')"; certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain; break;;
-		2) blue "重新申请SSL证书。"; rm -rf /etc/letsencrypt/{live,renewal,archive}; rm -rf /etc/nginx/conf.d/FLO.conf; readdomain; blue "申请SSL证书。"; certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain; break;;
+	    1) blue "强制申请SSL证书。"; domain="$(ls -l /etc/letsencrypt/live |awk '/^d/ {print $NF}')"; certssl; break;;
+		2) blue "重新申请SSL证书。"; rm -rf /etc/letsencrypt/{live,renewal,archive}; rm -rf /etc/nginx/conf.d/FLO.conf; readdomain; certssl; break;;
 		3) blue "跳过申请SSL证书。"; break;;
 		*) red "错误，请重新输入！"; continue;;
 		esac
@@ -286,10 +299,8 @@ server {
 }
 DEFAULT
 
-# 软连接ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-
-    nginx -t && nginx -s reload
-    echo -e "\e[35mNginx配置完成！\e[0m"
+# 软连接
+    #ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 }
 
 # Frp
@@ -299,11 +310,12 @@ if [ -s ${FRPPATH}/frps ]; then
 		blue "1、升级"
 		blue "2、退出"
 		readp "请输入选项：" OPTION
-		case $OPTION in 1) if [ ! -z $VER ]; then frptargz; readtoken; fi break;; 2) blue "退出。"; break;; *) red "错误，请重新输入！"; continue;; esac
+		case $OPTION in 1) if [ ! -z $VER ]; then frptargz; readtoken; frpserver; fi break;; 2) blue "退出。"; break;; *) red "错误，请重新输入！"; continue;; esac
 	done
 else
     frptargz
 	readtoken
+	frpserver
 fi
 
 frpsconfig(){
@@ -361,12 +373,6 @@ ExecStart=${FRPPATH}/frps -c ${FRPPATH}/frps.toml
 [Install]
 WantedBy=multi-user.target
 FRPS
-
-# 启动
-    chown root:root -R $FRPPATH && chmod 755 $FRPPATH
-    systemctl daemon-reload
-    systemctl start frps
-    systemctl enable frps
 }
 
 # SSH
