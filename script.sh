@@ -346,7 +346,7 @@ else
 		blue "3、跳过申请"
 		readp "请输入选项：" OPTION
 		case $OPTION in
-	    1) blue "强制申请SSL证书。"; domain="$(ls -l /etc/letsencrypt/live |awk '/^d/ {print $NF}')"; certssl; break;;
+	    1) blue "强制申请SSL证书。"; domain="$(ls -l /etc/letsencrypt/live |awk '/^d/ {print $NF}')"; nginxconfig; certssl; break;;
 		2) blue "重新申请SSL证书。"; rm -rf /etc/letsencrypt/{live,renewal,archive}; rm -rf /etc/nginx/conf.d/FLO.conf; readdomain; certssl; break;;
 		3) blue "跳过申请SSL证书。"; break;;
 		*) red "错误，请重新输入！"; continue;;
