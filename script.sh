@@ -62,7 +62,7 @@ nginxconfig(){
 # nginx.conf
     cat > /etc/nginx/nginx.conf << 'CONFIG'
 #Mu
-user nginx;
+user www-data;
 pid /run/nginx.pid;
 worker_processes auto;
 worker_rlimit_nofile 65535;
