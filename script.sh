@@ -27,15 +27,20 @@
 #命令 >/dev/null；正确信息输出到/dev/null；错误信息显示到屏幕
 #命令 2>/dev/null；错误信息输出到/dev/null；正确信息显示到屏幕
 
+set -ue
 red(){ echo -e "\e[31m$1\e[0m";}
 blue(){ echo -e "\e[34m$1\e[0m";}
 purple(){ echo -e "\e[35m$1\e[0m";}
 cyan(){ echo -e "\e[36m$1\e[0m";}
 readp(){ read -p "$(cyan "$1\n")" $2;}
 
-purple "\nMu"
-set -ue
+FRPPATH="/opt/Mu/frps"
+FRPFILE="https://github.com/fatedier/frp/releases/download"
+FRPAPI="https://api.github.com/repos/fatedier/frp/releases/latest"
+VER="$(curl -s $FRPAPI | grep '"tag_name":' | cut -d '"' -f 4 | cut -c 2-)"
+GREP="$(ps -ef | grep frps | grep -v grep | awk '{print $8}')"
 
+purple "\nMu"
 # 关闭SELINUX
 #if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config; setenforce 0; fi
 
@@ -64,7 +69,20 @@ readtoken(){
     readp "请输入password：" PASSWORD
     TOKEN="${USERNAME}${PASSWORD}"
     purple "TOKEN：$TOKEN"
-    while true; do readp "请确认令牌[Yes/No]：" INPUT; case $INPUT in [yY][eE][sS]|[yY]) purple "已确认。"; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入username：" USERNAME; readp "请输入password：" PASSWORD; TOKEN="${USERNAME}${PASSWORD}"; purple "TOKEN：$TOKEN";; *) red "错误，请重新输入！"; continue;; esac done
+    while true; do readp "请确认令牌[Yes/No]：" INPUT; case $INPUT in [yY][eE][sS]|[yY]) purple "已确认。"; frpsconfig; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入username：" USERNAME; readp "请输入password：" PASSWORD; TOKEN="${USERNAME}${PASSWORD}"; purple "TOKEN：$TOKEN";; *) red "错误，请重新输入！"; continue;; esac done
+}
+
+frptargz(){
+    FRPTAR="frp_${VER}_linux_${ARCH}.tar.gz"
+	FRPURL="${FRPFILE}/v${VER}/${FRPTAR}"
+	blue "下载$FRPTAR"
+	curl -L $FRPURL -o $FRPTAR
+	blue "提取$FRPTAR"
+	mkdir -p $FRPPATH
+	tar xzvf $FRPTAR
+	if [ ! -z $GREP ]; then pkill -9 frps; fi
+	mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
+	rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH}
 }
 
 # Nginx
@@ -268,55 +286,29 @@ server {
 }
 DEFAULT
 
-# 软连接
-#    ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+# 软连接ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
     nginx -t && nginx -s reload
     echo -e "\e[35mNginx配置完成！\e[0m"
 }
 
-# frps
-FRPPATH="/opt/Mu/frps"
-FRPFILE="https://github.com/fatedier/frp/releases/download"
-FRPAPI="https://api.github.com/repos/fatedier/frp/releases/latest"
-VER="$(curl -s $FRPAPI | grep '"tag_name":' | cut -d '"' -f 4 | cut -c 2-)"
-
-frptargz(){
-    FRPTAR="frp_${VER}_linux_${ARCH}.tar.gz"
-	FRPURL="${FRPFILE}/v${VER}/${FRPTAR}"
-	blue "下载$FRPTAR"
-	curl -L $FRPURL -o $FRPTAR
-	blue "提取$FRPTAR"
-	mkdir -p $FRPPATH
-	tar xzvf $FRPTAR
-	mv -f frp_${VER}_linux_${ARCH}/frps ${FRPPATH}
-	rm -rf ${FRPTAR} frp_${VER}_linux_${ARCH}
-}
-
-# 关闭进程
-GREP="$(ps -ef | grep frps | grep -v grep | awk '{print $8}')"
-#if [ ${FRPPATH}/frps == $GREP ]; then
-if [ ! -z $GREP ]; then
-    pkill -9 frps
-fi
-
-# 认证
-if [ ! -s ${FRPPATH}/frps ]; then
-    if [ ! -z $VER ]; then frptargz; readtoken; fi
-else
+# Frp
+if [ -s ${FRPPATH}/frps ]; then
     while true; do
 	    purple "检测到已安装frps。"
 		blue "1、升级"
 		blue "2、退出"
 		readp "请输入选项：" OPTION
-		case $OPTION in 1) if [ ! -z $VER ]; then frptargz; readtoken; fi break;; 2) echo -e "\e[32m退出。\e[0m"; break;; *) echo -e "\e[31m错误，请重新输入！\e[0m"; continue;; esac
+		case $OPTION in 1) if [ ! -z $VER ]; then frptargz; readtoken; fi break;; 2) blue "退出。"; break;; *) red "错误，请重新输入！"; continue;; esac
 	done
+else
+    frptargz
+	readtoken
 fi
 
-# 配置
-if [ ! -s ${FRPPATH}/frps.toml ]; then
+frpsconfig(){
 # frps.toml
-cat > ${FRPPATH}/frps.toml << TOML
+    cat > ${FRPPATH}/frps.toml << TOML
 bindAddr = "0.0.0.0"
 bindPort = 7000
 quicBindPort = 7000
@@ -339,7 +331,7 @@ webServer.pprofEnable = false
 auth.method = "token"
 auth.token = "$TOKEN"
 
-log.to = "./frps.log"
+log.to = "${FRPPATH}/frps.log"
 log.level = "info"
 log.maxDays = 3
 log.disablePrintColor = false
@@ -354,7 +346,7 @@ natholeAnalysisDataReserveHours = 168
 TOML
 
 # frps.service
-cat > /lib/systemd/system/frps.service << FRPS
+    cat > /lib/systemd/system/frps.service << FRPS
 [Unit]
 Description=Frp Server Service
 After=network.target syslog.target
@@ -371,11 +363,11 @@ WantedBy=multi-user.target
 FRPS
 
 # 启动
-chown root:root -R $FRPPATH && chmod 755 $FRPPATH
-systemctl daemon-reload
-systemctl start frps
-systemctl enable frps
-fi
+    chown root:root -R $FRPPATH && chmod 755 $FRPPATH
+    systemctl daemon-reload
+    systemctl start frps
+    systemctl enable frps
+}
 
 # SSH
 if [ ! -s /etc/ssh/sshd_config.d/FLO.conf ]; then
