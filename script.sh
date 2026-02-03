@@ -181,11 +181,6 @@ server {
         deny all;
     }
 
-    # ACME-challenge
-    location ^~ /.well-known/acme-challenge/ {
-        root /var/www/html;
-    }
-
     # Logging
     access_log /var/log/nginx/access.log combined buffer=512k flush=1m;
     error_log  /var/log/nginx/error.log warn;
@@ -193,14 +188,25 @@ server {
 
 # subdomains redirect
 server {
-	listen 80;
-    listen [::]:80;
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name .$domain;
+    server_name *.$domain;
     return 301 https://$domain\$request_uri;
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
+}
+
+# http redirect
+server {
+    listen 80;
+    listen [::]:80;
+    server_name $domain;
+    return 301 https://$domain\$request_uri;
+
+    # ACME-challenge
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
 }
 FLO
 
@@ -209,6 +215,10 @@ FLO
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
+    server_name _;
+    return 301 https://$domain\$request_uri;
+}
+server {
     listen 443 ssl http2 default_server;
     listen [::]:443 ssl http2 default_server;
     server_name _;
