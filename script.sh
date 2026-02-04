@@ -192,6 +192,7 @@ server {
     listen [::]:443 ssl http2;
     server_name *.$domain;
     return 301 https://$domain\$request_uri;
+
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
 }
@@ -216,13 +217,13 @@ server {
     listen 80 default_server;
     listen [::]:80 default_server;
     server_name _;
-    return 301 https://$domain\$request_uri;
+    return 444;
 }
 server {
-    listen 443 ssl http2 default_server;
-    listen [::]:443 ssl http2 default_server;
+    listen 443 default_server;
+    listen [::]:443 default_server;
     server_name _;
-    return 301 https://$domain\$request_uri;
+    return 444;
     ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;
 }
