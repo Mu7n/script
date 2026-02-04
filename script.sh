@@ -237,39 +237,37 @@ frpsconfig(){
 # frps.toml
     cat > ${FRPPATH}/frps.toml << TOML
 bindAddr = "0.0.0.0"
-bindPort = 7000
-quicBindPort = 7000
-
-vhostHTTPPort = 60080
+bindPort = 60443
+kcpBindPort = 60443
+vhostHTTPPort = 60443
 vhostHTTPSPort = 60443
 
-transport.maxPoolCount = 2000
-transport.tcpMux = true
-transport.tcpMuxKeepaliveInterval = 60
-transport.tcpKeepalive = 7200
-transport.tls.force = false
+auth.method = "token"
+auth.token = "$TOKEN"
 
 webServer.addr = "0.0.0.0"
 webServer.port = 7500
 webServer.user = "$USERNAME"
 webServer.password = "$PASSWORD"
-webServer.pprofEnable = false
+webServer.tls.certFile = "/etc/letsencrypt/live/$domain/fullchain.pem"
+webServer.tls.keyFile = "/etc/letsencrypt/live/$domain/privkey.pem"
+#subDomainHost = "$domain"
 
-auth.method = "token"
-auth.token = "$TOKEN"
+transport.maxPoolCount = 10
+transport.tcpKeepalive = 7200
+transport.tcpMux = true
+transport.tcpMuxKeepaliveInterval = 60
+transport.heartbeatTimeout = 90
 
 log.to = "${FRPPATH}/frps.log"
 log.level = "info"
 log.maxDays = 3
-log.disablePrintColor = false
 
 allowPorts = [
-  { start = 10001, end = 50000 }
+  { single = 3000 },
+  { single = 16601 },
+  { start = 10000, end = 60000 }
 ]
-
-maxPortsPerClient = 0
-udpPacketSize = 1500
-natholeAnalysisDataReserveHours = 168
 TOML
 
 # frps.service
