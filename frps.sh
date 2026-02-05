@@ -7,6 +7,12 @@ purple(){ echo -e "\e[35m$1\e[0m";}
 cyan(){ echo -e "\e[36m$1\e[0m";}
 readp(){ read -p "$(cyan "$1\n")" $2;}
 
+case $(uname -m) in
+  x86_64)     arch_sh="amd64";;
+  aarch64)    arch_sh="arm64";;
+  *)          red "未知系统！";;
+esac
+
 name_sh="frp"
 link_sh="https://github.com/fatedier/frp/releases/download"
 api_sh="https://api.github.com/repos/fatedier/frp/releases/latest"
@@ -15,12 +21,6 @@ file_sh="frp_${tag_sh}_linux_${arch_sh}.tar.gz"
 url_sh="${link_sh}/v${tag_sh}/${file_sh}"
 path_sh="/usr/local/${name_sh}"
 grep_sh="$(ps -ef | grep $name_sh | grep -v grep | awk '{print $8}')"
-
-case $(uname -m) in
-  x86_64)     arch_sh="amd64";;
-  aarch64)    arch_sh="arm64";;
-  *)          red "未知系统！";;
-esac
 
 frp_config(){
   cat > ${path_sh}/${name_sh}.toml << TOML
