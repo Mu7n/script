@@ -185,28 +185,6 @@ TARGZ
   fi
 }
 
-change_domain(){
-  if [ ! -s /etc/letsencrypt/live ]; then
-    read_domain
-	nginx_config
-	cert_ssl
-  else
-    while true; do
-	  purple "检测到已有SSL证书。"
-	  blue "1、强制申请"
-	  blue "2、更改域名"
-	  blue "3、跳过申请"
-	  readp "请输入选项：" option_sh
-	  case $option_sh in
-	    1) blue "强制申请SSL证书。"; domain_sh="$(ls -l /etc/letsencrypt/live |awk '/^d/ {print $NF}')"; nginx_config; cert_ssl; break;;
-		2) blue "重新申请SSL证书。"; rm -rf /etc/letsencrypt/{live,renewal,archive}; rm -rf /etc/nginx/conf.d/FLO.conf; read_domain; nginx_config; cert_ssl; break;;
-		3) blue "跳过申请SSL证书。"; break;;
-		*) red "错误，请重新输入！"; continue;;
-	  esac
-	done
-  fi
-}
-
 ssh_config(){
   if [ ! -s /etc/ssh/sshd_config.d/FLO.conf ]; then
 	readp "请输入SSH端口：" sshport_sh
@@ -224,7 +202,26 @@ SSHD
   fi
 }
 
-end_sh(){
-  ufw status
-  purple "\nEND！"
-}
+if [ -s /etc/letsencrypt/live ]; then
+  while true; do
+    purple "检测到已有SSL证书。"
+	blue "1、强制申请"
+	blue "2、更改域名"
+	blue "3、跳过申请"
+	readp "请输入选项：" option_sh
+	case $option_sh in
+	  1) blue "强制申请SSL证书。"; domain_sh="$(ls -l /etc/letsencrypt/live |awk '/^d/ {print $NF}')"; nginx_config; cert_ssl; ssh_config; break;;
+	  2) blue "重新申请SSL证书。"; rm -rf /etc/letsencrypt/{live,renewal,archive}; rm -rf /etc/nginx/conf.d/FLO.conf; read_domain; nginx_config; cert_ssl; ssh_config; break;;
+	  3) blue "跳过申请SSL证书。"; break;;
+	  *) red "错误，请重新输入！"; continue;;
+	esac
+  done
+else
+  read_domain
+  nginx_config
+  cert_ssl
+  ssh_config
+fi
+
+ufw status
+purple "\nEND！"
