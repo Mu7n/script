@@ -31,9 +31,9 @@ blue(){ echo -e "\e[34m$1\e[0m";}
 purple(){ echo -e "\e[35m$1\e[0m";}
 cyan(){ echo -e "\e[36m$1\e[0m";}
 readp(){ read -p "$(cyan "$1\n")" $2;}
+#if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config; setenforce 0; fi
 
 purple "\nMu"
-#if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config; setenforce 0; fi
 
 nginx_config(){
   cat > /etc/nginx/nginx.conf << 'CONFIG'
@@ -215,7 +215,7 @@ PubkeyAuthentication yes
 PasswordAuthentication no
 SSHD
 
-  blue "开发端口。"
+  blue "开放端口。"
   ufw allow $ssh_port
   ufw allow 'Nginx Full'
   echo "y" | ufw enable
