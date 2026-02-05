@@ -112,7 +112,7 @@ PasswordAuthentication no
 SSHD
 	ufw allow $sshport_sh
 	ufw allow 60443
-	ufw allow 7500
+	ufw allow 44380
 	echo "y" | ufw enable
 	systemctl restart sshd
   fi
