@@ -37,9 +37,9 @@ webServer.addr = "0.0.0.0"
 webServer.port = 7500
 webServer.user = "$USERNAME"
 webServer.password = "$PASSWORD"
-#webServer.tls.certFile = "/etc/letsencrypt/live/${domain_sh}/fullchain.pem"
-#webServer.tls.keyFile = "/etc/letsencrypt/live/${domain_sh}/privkey.pem"
-#subDomainHost = "$domain_sh"
+#webServer.tls.certFile = "/etc/letsencrypt/live/\${domain_sh}/fullchain.pem"
+#webServer.tls.keyFile = "/etc/letsencrypt/live/\${domain_sh}/privkey.pem"
+#subDomainHost = "\$domain_sh"
 
 transport.maxPoolCount = 10
 transport.tcpKeepalive = 7200
