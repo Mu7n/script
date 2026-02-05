@@ -3,7 +3,8 @@
 #用到哪，学到哪。
 #bash <(curl -sSL https://get.docker.com)；安装docker
 #systemctl start sshd = service sshd start；系统服务
-#ps -ef | grep 进程名 | grep -v grep | awk '{print $2}'；查找进程
+#ps -ef | grep 进程名 | grep -v grep | awk '{print $2}'；查找进程ID
+#awk -F '"' '{print $4}' | cut -c 2-；以' " '分隔号；-c 2显示第二个字符；-c 2-从第二个字符开始显示
 #chmod +x script.sh；赋予执行权限
 #chmod -R 755 文件 && chown root:root -R 文件；赋予文件权限 -R递归修改目录
 #tar -zcvf Mu.tar.gz /etc/nginx/Mu；压缩指定目录 tar -zcvf 文件名.tar.gz /文件目录
@@ -13,7 +14,7 @@
 #cat > file << EOF；覆盖&转义(文本中不需要转义的特殊符号前加\)
 #cat >> file << 'EOF'；追加&禁止转义(开头EOF加上''即可)
 #set -ue(退出报错)；set -x(显示命令)
-# ！逻辑中的非、不是；
+# ！(非、不是)；
 #if [ -s 文件]；如果文件存在或size大于0)
 #if [ ! -s 文件]；如果文件不存在或size等于0
 #if [ -z $string]；如果变量等于0或空)
@@ -30,10 +31,9 @@ cyan(){ echo -e "\e[36m$1\e[0m";}
 readp(){ read -p "$(cyan "$1\n")" $2;}
 
 purple "\nMu"
-# 关闭SELINUX
 #if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config; setenforce 0; fi
 
-nginxconfig(){
+nginx_config(){
   cat > /etc/nginx/nginx.conf << 'CONFIG'
 user www-data;
 pid /run/nginx.pid;
@@ -88,7 +88,6 @@ http {
     gzip_vary on;
     gzip_proxied any;
     gzip_comp_level 6;
-    gzip_buffers 16 8k;
     gzip_types text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
 
     # Security headers
@@ -206,7 +205,7 @@ DEFAULT
 read_domain(){
   readp "请输入域名：" domain_sh
   purple "域名：$domain_sh"
-  while true; do readp "请确认域名[Yes/No]：" input; case $input in [yY][eE][sS]|[yY]) purple "已确认。"; nginxconfig; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入域名：" domain_sh; purple "域名：$domain_sh";; *) red "错误，请重新输入！"; continue;; esac done
+  while true; do readp "请确认域名[Yes/No]：" input; case $input in [yY][eE][sS]|[yY]) purple "已确认。"; nginx_config; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入域名：" domain_sh; purple "域名：$domain_sh";; *) red "错误，请重新输入！"; continue;; esac done
 }
 
 cert_ssl(){
@@ -220,7 +219,7 @@ cert_ssl(){
 # Nginx
 if [ ! -s /etc/nginx/Mu ]; then
   blue "安装nginx和certbot。"
-  sudo apt install -y nginx certbot
+  apt-get update && apt install -y nginx certbot
 
   blue "解压html。"
   cat > /etc/nginx/Mu.txt << 'TARGZ'
