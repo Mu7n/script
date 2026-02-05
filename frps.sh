@@ -98,23 +98,6 @@ frp_file(){
 	rm -rf ${file_sh} frp_${tag_sh}_linux_${arch_sh}
 }
 
-upgrade_file(){
-  if [ -s ${path_sh}/frps ]; then
-    while true; do
-	  purple "检测到已安装frp。"
-	  blue "1、升级"
-	  blue "2、退出"
-	  readp "请输入选项：" option_sh
-	  case $option_sh in 1) if [ ! -z $tag_sh ]; then frp_file; read_token; frp_config; frp_service; fi; break;; 2) blue "退出。"; break;; *) red "错误，请重新输入！"; continue;; esac
-	done
-  else
-    frp_file
-	read_token
-	frp_config
-	frp_service
-  fi
-}
-
 ssh_config(){
   if [ ! -s /etc/ssh/sshd_config.d/FLO.conf ]; then
 	readp "请输入SSH端口：" sshport_sh
@@ -135,8 +118,22 @@ SSHD
   fi
 }
 
-end_sh(){
-  ufw status
-  service $name_sh status
-  purple "\nEND！"
-}
+if [ -s ${path_sh}/frps ]; then
+  while true; do
+    purple "检测到已安装frp。"
+	blue "1、升级"
+	blue "2、退出"
+	readp "请输入选项：" option_sh
+	case $option_sh in 1) if [ ! -z $tag_sh ]; then frp_file; read_token; frp_config; frp_service; ssh_config; fi; break;; 2) blue "退出。"; break;; *) red "错误，请重新输入！"; continue;; esac
+  done
+else
+  frp_file
+  read_token
+  frp_config
+  frp_service
+  ssh_config
+fi
+
+ufw status
+service $name_sh status
+purple "\nEND！"
