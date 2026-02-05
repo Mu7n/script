@@ -34,7 +34,7 @@ auth.method = "token"
 auth.token = "$token_sh"
 
 webServer.addr = "0.0.0.0"
-webServer.port = 7500
+webServer.port = 44380
 webServer.user = "$USERNAME"
 webServer.password = "$PASSWORD"
 #webServer.tls.certFile = "/etc/letsencrypt/live/\${domain_sh}/fullchain.pem"
@@ -47,15 +47,15 @@ transport.tcpMux = true
 transport.tcpMuxKeepaliveInterval = 60
 transport.heartbeatTimeout = 90
 
-log.to = "${path_sh}/${name_sh}.log"
-log.level = "info"
-log.maxDays = 3
-
 allowPorts = [
   { single = 3000 },
   { single = 16601 },
   { start = 10000, end = 60000 }
 ]
+
+log.to = "${path_sh}/${name_sh}.log"
+log.level = "info"
+log.maxDays = 3
 TOML
 }
 
@@ -77,6 +77,8 @@ WantedBy=multi-user.target
 FRPS
   chmod 644 /etc/systemd/system/${name_sh}.service
   systemctl daemon-reload
+  systemctl start $name_sh
+  systemctl enable $name_sh
 }
 
 read_token(){
@@ -88,14 +90,14 @@ read_token(){
 }
 
 frp_file(){
-	blue "下载$file_sh"
-	curl -L $url_sh -o $file_sh
-	blue "提取$file_sh"
-	mkdir -p $path_sh
-	tar xzvf $file_sh
-	if [ ! -z $grep_sh ]; then pkill -9 $name_sh; fi
-	mv -f frp_${tag_sh}_linux_${arch_sh}/frps ${path_sh}
-	rm -rf ${file_sh} frp_${tag_sh}_linux_${arch_sh}
+  blue "下载$file_sh"
+  curl -L $url_sh -o $file_sh
+  blue "提取$file_sh"
+  mkdir -p $path_sh
+  tar xzvf $file_sh
+  if [ ! -z $grep_sh ]; then pkill -9 $name_sh; fi
+  mv -f frp_${tag_sh}_linux_${arch_sh}/frps ${path_sh}
+  rm -rf ${file_sh} frp_${tag_sh}_linux_${arch_sh}
 }
 
 ssh_config(){
@@ -112,8 +114,6 @@ SSHD
 	ufw allow 60443
 	ufw allow 7500
 	echo "y" | ufw enable
-	systemctl start $name_sh
-	systemctl enable $name_sh
 	systemctl restart sshd
   fi
 }
