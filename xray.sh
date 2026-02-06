@@ -24,12 +24,12 @@ grep_sh="$(ps -ef | grep $name_sh | grep -v grep | awk '{print $8}')"
 uuid_sh="$(xray uuid)"
 
 sh_config(){
-  cat > ${xray_path}/config.json << JSON
+  cat > ${path_sh}/config.json << JSON
 {
   "log": {
     "loglevel": "warning", // 内容从少到多: "none", "error", "warning", "info", "debug"
-    "access": "/${xray_path}/access.log",
-    "error": "/${xray_path}/error.log"
+    "access": "/${path_sh}/access.log",
+    "error": "/${path_sh}/error.log"
   },
   "dns": {
     "servers": [
@@ -85,8 +85,8 @@ sh_config(){
           "alpn": "http/1.1",
           "certificates": [
             {
-              "certificateFile": "/etc/letsencrypt/live/\${domain}/fullchain.pem",
-              "keyFile": "/etc/letsencrypt/live/\${domain}/privkey.pem"
+              "certificateFile": "/etc/letsencrypt/live/\${domain_sh}/fullchain.pem",
+              "keyFile": "/etc/letsencrypt/live/\${domain_sh}/privkey.pem"
             }
           ]
         }
@@ -114,7 +114,7 @@ Description=$name_sh Service
 After=network.target nss-lookup.target
 
 [Service]
-ExecStart=${xray_path}/${name_sh} run -config ${xray_path}/config.json
+ExecStart=${path_sh}/${name_sh} run -config ${path_sh}/config.json
 Restart=on-failure
 RestartPreventExitStatus=23
 LimitNPROC=10000
