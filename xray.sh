@@ -24,7 +24,7 @@ grep_sh="$(ps -ef | grep $name_sh | grep -v grep | awk '{print $8}')"
 uuid_sh="$(xray uuid)"
 
 sh_config(){
-  cat > ${xray_path}/config.json < JSON
+  cat > ${xray_path}/config.json << JSON
 {
   "log": {
     "loglevel": "warning", // 内容从少到多: "none", "error", "warning", "info", "debug"
