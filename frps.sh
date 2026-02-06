@@ -13,7 +13,7 @@ case $(uname -m) in
   *)          red "未知系统！";;
 esac
 
-name_sh="frp"
+name_sh="frps"
 link_sh="https://github.com/fatedier/frp/releases/download"
 api_sh="https://api.github.com/repos/fatedier/frp/releases/latest"
 tag_sh="$(curl -s $api_sh | grep 'tag_name' | awk -F '"' '{print $4}' | cut -c 2-)"
@@ -22,8 +22,8 @@ url_sh="${link_sh}/v${tag_sh}/${file_sh}"
 path_sh="/usr/local/${name_sh}"
 grep_sh="$(ps -ef | grep $name_sh | grep -v grep | awk '{print $8}')"
 
-frp_config(){
-  cat > ${path_sh}/${name_sh}.toml << TOML
+sh_config(){
+  cat > ${path_sh}/config.toml << TOML
 bindAddr = "0.0.0.0"
 bindPort = 60443
 kcpBindPort = 60443
@@ -59,10 +59,10 @@ log.maxDays = 3
 TOML
 }
 
-frp_service(){
-  cat > /etc/systemd/system/${name_sh}.service << FRPS
+sh_service(){
+  cat > /etc/systemd/system/${name_sh}.service << FRP
 [Unit]
-Description=Frp Server Service
+Description=$name_sh Service
 After=network.target syslog.target
 Wants=network.target
 
@@ -70,11 +70,11 @@ Wants=network.target
 Type=simple
 Restart=on-failure
 RestartSec=5s
-ExecStart=${path_sh}/frps -c ${path_sh}/${name_sh}.toml
+ExecStart=${path_sh}/${name_sh} -c ${path_sh}/$config.toml
 
 [Install]
 WantedBy=multi-user.target
-FRPS
+FRP
   chmod 644 /etc/systemd/system/${name_sh}.service
   systemctl daemon-reload
   systemctl start $name_sh
@@ -89,7 +89,7 @@ read_token(){
   while true; do readp "请确认令牌[Yes/No]：" input_sh; case $input_sh in [yY][eE][sS]|[yY]) purple "已确认。"; break;; [nN][oO]|[nN]) blue "请重新输入。"; readp "请输入username：" USERNAME; readp "请输入password：" PASSWORD; token_sh="${USERNAME}${PASSWORD}"; purple "token：$token_sh";; *) red "错误，请重新输入！"; continue;; esac done
 }
 
-frp_file(){
+sh_file(){
   blue "下载$file_sh"
   curl -L $url_sh -o $file_sh
   blue "提取$file_sh"
@@ -100,7 +100,7 @@ frp_file(){
   rm -rf ${file_sh} frp_${tag_sh}_linux_${arch_sh}
 }
 
-ssh_config(){
+sshd_config(){
   if [ ! -s /etc/ssh/sshd_config.d/FLO.conf ]; then
 	readp "请输入SSH端口：" sshport_sh
 	purple "SSH端口：$sshport_sh"
@@ -118,20 +118,22 @@ SSHD
   fi
 }
 
-if [ -s ${path_sh}/frps ]; then
+purple "\nMu"
+
+if [ -s ${path_sh}/${name_sh} ]; then
   while true; do
-    purple "检测到已安装frp。"
+    purple "检测到已安装$name_sh。"
 	blue "1、升级"
 	blue "2、退出"
 	readp "请输入选项：" option_sh
-	case $option_sh in 1) if [ ! -z $tag_sh ]; then frp_file; read_token; frp_config; frp_service; ssh_config; fi; break;; 2) blue "退出。"; break;; *) red "错误，请重新输入！"; continue;; esac
+	case $option_sh in 1) if [ ! -z $tag_sh ]; then sh_file; read_token; sh_config; sh_service; sshd_config; fi; break;; 2) blue "退出。"; break;; *) red "错误，请重新输入！"; continue;; esac
   done
 else
-  frp_file
+  sh_file
   read_token
-  frp_config
-  frp_service
-  ssh_config
+  sh_config
+  sh_service
+  sshd_config
 fi
 
 ufw status
