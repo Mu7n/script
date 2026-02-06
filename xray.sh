@@ -114,7 +114,7 @@ Description=$name_sh Service
 After=network.target nss-lookup.target
 
 [Service]
-ExecStart=${path_sh}/${name_sh} run -config ${path_sh}/config.json
+ExecStart=${path_sh}/${name_sh} run -c ${path_sh}/config.json
 Restart=on-failure
 RestartPreventExitStatus=23
 LimitNPROC=10000
