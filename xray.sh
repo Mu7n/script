@@ -133,7 +133,7 @@ XRAY
 
 sh_file(){
   blue "下载$file_sh"
-  curl -L $url_sh
+  curl -OL $url_sh
   blue "提取$file_sh"
   mkdir -p -m 644 $path_sh
   if [ ! -z $grep_sh ]; then pkill -9 $name_sh; fi
