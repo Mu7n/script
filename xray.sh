@@ -133,13 +133,12 @@ XRAY
 
 sh_file(){
   blue "下载$file_sh"
-  curl -L $url_sh -o $file_sh
+  curl -L $url_sh
   blue "提取$file_sh"
   mkdir -p -m 644 $path_sh
-  unzip -vo $file_sh
   if [ ! -z $grep_sh ]; then pkill -9 $name_sh; fi
-  mv -f Xray-linux-${arch_sh}/{xray,geoip.dat,geosite.dat} ${path_sh}
-  rm -rf ${file_sh} Xray-linux-${arch_sh}
+  unzip -oj $file_sh -d $path_sh
+  rm -rf ${file_sh} 
 }
 
 ssh_config(){
