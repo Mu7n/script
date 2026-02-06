@@ -23,19 +23,7 @@ path="/usr/local/${name_sh}"
 grep_sh="$(ps -ef | grep $name_sh | grep -v grep | awk '{print $8}')"
 uuid_sh="$(xray uuid)"
 
-
-download_sh(){
-  blue "下载$xray_zip"
-	curl -L $xray_url -o $xray_zip
-	blue "提取$xray_zip"
-	mkdir -p -m 644 $xray_path
-	tar xzvf $xray_path
-	if [ ! -z $xray_grep ]; then pkill -9 frps; fi
-	mv -f Xray-linux-${xray_tag}/{xray,geoip.dat,geosite.dat} ${xray_path}
-	rm -rf ${xray_zip} Xray-linux-${xray_tag}
-}
-
-xray_config(){
+sh_config(){
   cat > ${xray_path}/config.json < JSON
 {
   "log": {
@@ -119,43 +107,74 @@ xray_config(){
 JSON
 }
 
-xray_service(){
-  cat >/etc/systemd/system/xray.service <<XRAY
+sh_service(){
+  cat > /etc/systemd/system/${name_sh}.service << XRAY
 [Unit]
-Description=Xray Service
+Description=$name_sh Service
 After=network.target nss-lookup.target
 
 [Service]
-ExecStart=${xray_path}/xray run -config ${xray_path}/config.json
+ExecStart=${xray_path}/${name_sh} run -config ${xray_path}/config.json
 Restart=on-failure
 RestartPreventExitStatus=23
 LimitNPROC=10000
 LimitNOFILE=1000000
-RuntimeDirectory=xray
-RuntimeDirectoryMode=0755
-
-[Install]
-WantedBy=multi-user.target
-EOF
-  cat >/etc/systemd/system/xray@.service <<EOF
-[Unit]
-Description=Xray Service
-After=network.target nss-lookup.target
-
-[Service]
-ExecStart=${xray_path}/xray run -config ${xray_path}/%i.json
-Restart=on-failure
-RestartPreventExitStatus=23
-LimitNPROC=10000
-LimitNOFILE=1000000
-RuntimeDirectory=xray-%i
+RuntimeDirectory=$name_sh
 RuntimeDirectoryMode=0755
 
 [Install]
 WantedBy=multi-user.target
 XRAY
-  chmod 644 /etc/systemd/system/${name_sh}.service /etc/systemd/system/${name_sh}@.service
+  chmod 644 /etc/systemd/system/${name_sh}.service
   systemctl daemon-reload
   systemctl start $name_sh
   systemctl enable $name_sh
 }
+
+sh_file(){
+  blue "下载$file_sh"
+  curl -L $url_sh -o $file_sh
+  blue "提取$file_sh"
+  mkdir -p -m 644 $path_sh
+  tar xzvf $file_sh
+  if [ ! -z $grep_sh ]; then pkill -9 $name_sh; fi
+  mv -f Xray-linux-${arch_sh}/{xray,geoip.dat,geosite.dat} ${path_sh}
+  rm -rf ${file_sh} Xray-linux-${arch_sh}
+}
+
+ssh_config(){
+  if [ ! -s /etc/ssh/sshd_config.d/FLO.conf ]; then
+	readp "请输入SSH端口：" sshport_sh
+	purple "SSH端口：$sshport_sh"
+	cat > /etc/ssh/sshd_config.d/FLO.conf << SSHD
+Port $sshport_sh
+PermitRootLogin yes
+PubkeyAuthentication yes
+PasswordAuthentication no
+SSHD
+	ufw allow $sshport_sh
+	ufw allow 443
+	ufw allow 80
+	echo "y" | ufw enable
+	systemctl restart sshd
+  fi
+}
+
+if [ -s ${path_sh}/${name_sh} ]; then
+  while true; do
+    purple "检测到已安装$name_sh。"
+	blue "1、升级"
+	blue "2、退出"
+	readp "请输入选项：" option_sh
+	case $option_sh in 1) if [ ! -z $tag_sh ]; then sh_file; sh_config; sh_service; ssh_config; fi; break;; 2) blue "退出。"; break;; *) red "错误，请重新输入！"; continue;; esac
+  done
+else
+  sh_file
+  sh_config
+  sh_service
+  ssh_config
+fi
+
+ufw status
+service $name_sh status
+purple "\nEND！"
