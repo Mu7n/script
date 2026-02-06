@@ -7,6 +7,9 @@
 #systemctl start 进程；service 进程 start
 #ps -ef | grep 进程 | grep -v grep | awk '{print $2}'；查找进程ID
 #awk -F '"' '{print $4}' | cut -c 2-；以' " '分隔号；-c 2显示第二个字符；-c 2-从第二个字符开始显示
+#awk中/ /是正则表达式；^表示字符串中开始的位置；d/-分别是权限中开始字符
+#ls -l /etc/letsencrypt/live | awk '/^d/ {print $NF}'；打印/live下的子目录
+#ls -l /etc/letsencrypt/live | awk '/^-/ {print $NF}'；打印/live下的文件
 #chmod +x script.sh；赋予执行权限
 #chmod -R 755 文件 && chown root:root -R 文件；赋予文件权限 -R递归修改目录
 #tar -zcvf 文件.tar.gz /文件目录
@@ -31,9 +34,6 @@ blue(){ echo -e "\e[34m$1\e[0m";}
 purple(){ echo -e "\e[35m$1\e[0m";}
 cyan(){ echo -e "\e[36m$1\e[0m";}
 readp(){ read -p "$(cyan "$1\n")" $2;}
-#if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config; setenforce 0; fi
-
-purple "\nMu"
 
 nginx_config(){
   cat > /etc/nginx/nginx.conf << 'CONFIG'
@@ -201,6 +201,8 @@ SSHD
 	systemctl restart sshd
   fi
 }
+
+purple "\nMu"
 
 if [ -s /etc/letsencrypt/live ]; then
   while true; do
