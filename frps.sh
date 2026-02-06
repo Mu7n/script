@@ -91,7 +91,7 @@ read_token(){
 
 sh_file(){
   blue "下载$file_sh"
-  curl -L $url_sh -o $file_sh
+  curl -OL $url_sh
   blue "提取$file_sh"
   mkdir -p -m 644 $path_sh
   tar xzvf $file_sh
