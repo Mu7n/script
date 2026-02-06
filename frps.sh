@@ -70,7 +70,7 @@ Wants=network.target
 Type=simple
 Restart=on-failure
 RestartSec=5s
-ExecStart=${path_sh}/${name_sh} -c ${path_sh}/$config.toml
+ExecStart=${path_sh}/${name_sh} -c ${path_sh}/config.toml
 
 [Install]
 WantedBy=multi-user.target
