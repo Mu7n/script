@@ -136,7 +136,7 @@ sh_file(){
   curl -L $url_sh -o $file_sh
   blue "提取$file_sh"
   mkdir -p -m 644 $path_sh
-  tar xzvf $file_sh
+  unzip -vo $file_sh
   if [ ! -z $grep_sh ]; then pkill -9 $name_sh; fi
   mv -f Xray-linux-${arch_sh}/{xray,geoip.dat,geosite.dat} ${path_sh}
   rm -rf ${file_sh} Xray-linux-${arch_sh}
