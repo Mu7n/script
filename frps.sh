@@ -93,10 +93,10 @@ sh_file(){
   blue "下载$file_sh"
   curl -L $url_sh -o $file_sh
   blue "提取$file_sh"
-  mkdir -p $path_sh
+  mkdir -p -m 644 $path_sh
   tar xzvf $file_sh
   if [ ! -z $grep_sh ]; then pkill -9 $name_sh; fi
-  mv -f frp_${tag_sh}_linux_${arch_sh}/frps ${path_sh}
+  mv -f frp_${tag_sh}_linux_${arch_sh}/${name_sh} ${path_sh}
   rm -rf ${file_sh} frp_${tag_sh}_linux_${arch_sh}
 }
 
