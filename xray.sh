@@ -21,12 +21,12 @@ file_sh="Xray-linux-${arch_sh}.zip"
 url_sh="${link_sh}/${tag_sh}/${file_sh}"
 path_sh="/usr/local/${name_sh}"
 grep_sh="$(ps -ef | grep $name_sh | grep -v grep | awk '{print $8}')"
+
+sh_config(){
 uuid_sh="$(xray uuid)"
 x25519_sh="$(xray x25519 > ${path_sh}/x25519.txt)"
 private_sh="$(awk -F ' ' '{print $2}' ${path_sh}/x25519.txt | awk 'NR==1')"
 public_sh="$(awk -F ' ' '{print $2}' ${path_sh}/x25519.txt | awk 'NR==2')"
-
-sh_config(){
   cat > ${path_sh}/config.json << JSON
 {
     "log": {
