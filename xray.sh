@@ -22,87 +22,133 @@ url_sh="${link_sh}/${tag_sh}/${file_sh}"
 path_sh="/usr/local/${name_sh}"
 grep_sh="$(ps -ef | grep $name_sh | grep -v grep | awk '{print $8}')"
 uuid_sh="$(xray uuid)"
+x25519_sh="$(xray x25519 > ${path_sh}/x25519.txt)"
+private_sh="$(awk -F ' ' '{print $2}' ${path_sh}/x25519.txt | awk 'NR==1')"
+public_sh="$(awk -F ' ' '{print $2}' ${path_sh}/x25519.txt | awk 'NR==2')"
 
 sh_config(){
   cat > ${path_sh}/config.json << JSON
 {
-  "log": {
-    "loglevel": "warning", // 内容从少到多: "none", "error", "warning", "info", "debug"
-    "access": "/${path_sh}/access.log",
-    "error": "/${path_sh}/error.log"
-  },
-  "dns": {
-    "servers": [
-      "https+local://1.1.1.1/dns-query", // 首选 1.1.1.1 的 DoH 查询，牺牲速度但可防止 ISP 偷窥
-      "localhost"
-    ]
-  },
-  "routing": {
-    "domainStrategy": "IPIfNonMatch",
-    "rules": [
-      {
-        "ip": [
-          "geoip:private" // 分流条件：geoip 文件内，名为"private"的规则（本地）
-        ],
-        "outboundTag": "block" // 分流策略：交给出站"block"处理（黑洞屏蔽）
-      },
-      {
-        "ip": ["geoip:cn"],
-        "outboundTag": "block" // 防止服务器直连国内
-      },
-      {
-        "domain": [
-          "geosite:category-ads-all" // 分流条件：geosite 文件内，名为"category-ads-all"的规则（各种广告域名）
-        ],
-        "outboundTag": "block" // 分流策略：交给出站"block"处理（黑洞屏蔽）
-      }
-    ]
-  },
-  "inbounds": [
-    {
-      "port": 443,
-      "protocol": "vless",
-      "settings": {
-        "clients": [
-          {
-            "id": "${uuid_sh}",
-            "flow": "xtls-rprx-vision",
-            "level": 0,
-            "email": "xray@vless.xtls"
-          }
-        ],
-        "decryption": "none",
-        "fallbacks": [
-          {
-            "dest": 80 // 默认回落到防探测的代理
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "tcp",
-        "security": "tls",
-        "tlsSettings": {
-          "alpn": "http/1.1",
-          "certificates": [
-            {
-              "certificateFile": "/etc/letsencrypt/live/\${domain_sh}/fullchain.pem",
-              "keyFile": "/etc/letsencrypt/live/\${domain_sh}/privkey.pem"
-            }
-          ]
-        }
-      }
-    }
-  ],
-  "outbounds": [
-    {
-      "tag": "direct",
-      "protocol": "freedom"
+    "log": {
+        "loglevel": "warning", // 内容从少到多: "none", "error", "warning", "info", "debug"
+        "access": "/${path_sh}/access.log",
+        "error": "/${path_sh}/error.log"
     },
-    {
-      "tag": "block",
-      "protocol": "blackhole"
-    }
-  ]
+    "dns": {
+        "servers": [
+            "https+local://1.1.1.1/dns-query", // 首选 1.1.1.1 的 DoH 查询，牺牲速度但可防止 ISP 偷窥
+            "localhost"
+        ]
+    },
+    "routing": {
+        "domainStrategy": "IPIfNonMatch",
+        "rules": [
+            {
+                "ip": [
+                    "geoip:cn"
+                ],
+                "outboundTag": "block"
+            },
+            {
+                "domain": [
+                    "geosite:cn"
+                ],
+                "outboundTag": "block"
+            },
+            {
+                "domain": [
+                    "geosite:category-ads-all"
+                ],
+                "outboundTag": "block"
+            },
+            {
+                "inboundTag": [
+                    "dokodemo-in"
+                ],
+                "domain": [
+                    "speed.cloudflare.com" // 需要和 realitySettings 的 serverNames 保持一致
+                ],
+                "outboundTag": "direct"
+            },
+            {
+                "inboundTag": [
+                    "dokodemo-in"
+                ],
+                "outboundTag": "block"
+            }
+        ]
+    },
+    "inbounds": [
+        {
+            "listen": "127.0.0.1",
+            "tag": "dokodemo-in",
+            "port": 44344, // 需要和 reality 入站 target 保持一致
+            "protocol": "dokodemo-door",
+            "settings": {
+                "address": "speed.cloudflare.com", // 不被偷跑流量speed.cloudflare.com
+                "port": 443,
+                "network": "tcp"
+            },
+            "sniffing": { // 勿动
+                "enabled": true,
+                "destOverride": [
+                    "tls"
+                ],
+                "routeOnly": true
+            }
+        },
+        {
+            "listen": "0.0.0.0",
+            "port": 443,
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "$uuid_sh",
+                        "flow": ""
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "xhttp",
+                "xhttpSettings": {
+                    "path": "/speedcloudflarecom"
+                },
+                "security": "reality",
+                "realitySettings": {
+                    "target": "127.0.0.1:44344", // 指向前面 dokodemo-door 入站
+                    "serverNames": [
+                        "speed.cloudflare.com"
+                    ],
+                    "privateKey": "$private_sh",
+                    "shortIds": [
+                        "1a2b3c4d5e6f",
+                        "a1b2c3d4e5f6"
+                    ]
+                }
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls",
+                    "quic"
+                ],
+                "routeOnly": true
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "protocol": "freedom",
+            "tag": "direct"
+        },
+        {
+            "protocol": "blackhole",
+            "tag": "block"
+        }
+    ]
 }
 JSON
 }
