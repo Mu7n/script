@@ -163,7 +163,6 @@ After=network.target nss-lookup.target
 [Service]
 ExecStart=${path_sh}/${name_sh}
 Restart=on-failure
-RestartPreventExitStatus=23
 LimitNPROC=10000
 LimitNOFILE=1000000
 RuntimeDirectory=$name_sh
