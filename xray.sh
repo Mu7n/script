@@ -154,8 +154,6 @@ JSON
 }
 
 sh_service(){
-  cat > ${path_sh}/config.json << JSON
-{}
 JSON
   cat > /etc/systemd/system/${name_sh}.service << XRAY
 [Unit]
