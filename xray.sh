@@ -188,7 +188,7 @@ sh_file(){
   if [ ! -z $grep_sh ]; then pkill -9 $name_sh; fi
   unzip -oj $file_sh -d $path_sh
   rm -rf ${file_sh}
-  ln -s $path_sh /usr/local/bin
+  ln -s ${path_sh}/${name_sh} /usr/local/bin
 }
 
 ssh_config(){
