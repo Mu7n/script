@@ -217,8 +217,8 @@ if [ -s ${path_sh}/${name_sh} ]; then
   done
 else
   sh_file
-  sh_config
   sh_service
+  sh_config
   ssh_config
 fi
 
