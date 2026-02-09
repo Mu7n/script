@@ -19,7 +19,7 @@ api_sh="https://api.github.com/repos/XTLS/Xray-core/releases/latest"
 tag_sh="$(curl -s $api_sh | grep 'tag_name' | awk -F '"' '{print $4}')"
 file_sh="Xray-linux-${arch_sh}.zip"
 url_sh="${link_sh}/${tag_sh}/${file_sh}"
-path_sh="/usr/local/bin/${name_sh}"
+path_sh="/usr/local/bin"
 grep_sh="$(ps -ef | grep $name_sh | grep -v grep | awk '{print $8}')"
 
 sh_config(){
@@ -151,7 +151,6 @@ sh_config(){
     ]
 }
 JSON
-   xray run -c ${path_sh}/config.json
 }
 
 sh_service(){
@@ -217,12 +216,12 @@ if [ -s ${path_sh}/${name_sh} ]; then
 	blue "1、升级"
 	blue "2、退出"
 	readp "请输入选项：" option_sh
-	case $option_sh in 1) if [ ! -z $tag_sh ]; then sh_file; sh_service; sh_config; ssh_config; fi; break;; 2) blue "退出。"; break;; *) red "错误，请重新输入！"; continue;; esac
+	case $option_sh in 1) if [ ! -z $tag_sh ]; then sh_file; sh_config; sh_service; ssh_config; fi; break;; 2) blue "退出。"; break;; *) red "错误，请重新输入！"; continue;; esac
   done
 else
   sh_file
-  sh_service
   sh_config
+  sh_service
   ssh_config
 fi
 
