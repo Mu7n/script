@@ -155,14 +155,18 @@ JSON
 }
 
 sh_service(){
+  cat > ${path_sh}/config.json << JSON
+{}
+JSON
   cat > /etc/systemd/system/${name_sh}.service << XRAY
 [Unit]
 Description=$name_sh Service
 After=network.target nss-lookup.target
 
 [Service]
-ExecStart=${path_sh}/${name_sh}
+ExecStart=${path_sh}/${name_sh} run -c ${path_sh}/config.json
 Restart=on-failure
+RestartPreventExitStatus=23
 LimitNPROC=10000
 LimitNOFILE=1000000
 RuntimeDirectory=$name_sh
