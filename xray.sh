@@ -151,6 +151,7 @@ sh_config(){
     ]
 }
 JSON
+   xray run -c ${path_sh}/config.json
 }
 
 sh_service(){
@@ -160,7 +161,7 @@ Description=$name_sh Service
 After=network.target nss-lookup.target
 
 [Service]
-ExecStart=${path_sh}/${name_sh} run -c ${path_sh}/config.json
+ExecStart=${path_sh}/${name_sh}
 Restart=on-failure
 RestartPreventExitStatus=23
 LimitNPROC=10000
