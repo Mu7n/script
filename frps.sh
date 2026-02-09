@@ -19,7 +19,7 @@ api_sh="https://api.github.com/repos/fatedier/frp/releases/latest"
 tag_sh="$(curl -s $api_sh | grep 'tag_name' | awk -F '"' '{print $4}' | cut -c 2-)"
 file_sh="frp_${tag_sh}_linux_${arch_sh}.tar.gz"
 url_sh="${link_sh}/v${tag_sh}/${file_sh}"
-path_sh="/usr/local/${name_sh}"
+path_sh="/etc/allinone/${name_sh}"
 grep_sh="$(ps -ef | grep $name_sh | grep -v grep | awk '{print $8}')"
 
 sh_config(){
@@ -101,10 +101,10 @@ sh_file(){
 }
 
 sshd_config(){
-  if [ ! -s /etc/ssh/sshd_config.d/FLO.conf ]; then
+  if [ ! -s /etc/ssh/sshd_config.d/AIO.conf ]; then
 	readp "请输入SSH端口：" sshport_sh
 	purple "SSH端口：$sshport_sh"
-	cat > /etc/ssh/sshd_config.d/FLO.conf << SSHD
+	cat > /etc/ssh/sshd_config.d/AIO.conf << SSHD
 Port $sshport_sh
 PermitRootLogin yes
 PubkeyAuthentication yes
