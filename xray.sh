@@ -154,7 +154,6 @@ JSON
 }
 
 sh_service(){
-JSON
   cat > /etc/systemd/system/${name_sh}.service << XRAY
 [Unit]
 Description=$name_sh Service
