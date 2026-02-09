@@ -2,6 +2,7 @@
 
 #用到哪，学到哪。
 #bash <(curl -sSL https://get.docker.com)；安装docker
+#export PATH="/etc/ALLINONE/进程文件或脚本:$PATH"；ln -s ${进程文件或脚本} /usr/local/bin；终端输入进程/脚本名称可直接运行
 #vim按下i进入编辑模式；按下ecs退出编辑模式；输入:wq!强制保存退出；输入:q!退出不保存
 #iptables -A INPUT -p tcp --dport 端口 -j ACCEPT
 #systemctl start 进程；service 进程 start
