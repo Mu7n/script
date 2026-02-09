@@ -30,9 +30,9 @@ sh_config(){
   cat > ${path_sh}/config.json << JSON
 {
     "log": {
-        "loglevel": "warning", // 内容从少到多: "none", "error", "warning", "info", "debug"
-        "access": "/${path_sh}/access.log",
-        "error": "/${path_sh}/error.log"
+        "loglevel": "warning",
+        "access": "${path_sh}/access.log",
+        "error": "${path_sh}/error.log"
     },
     "dns": {
         "servers": [
