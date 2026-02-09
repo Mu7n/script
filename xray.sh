@@ -19,7 +19,7 @@ api_sh="https://api.github.com/repos/XTLS/Xray-core/releases/latest"
 tag_sh="$(curl -s $api_sh | grep 'tag_name' | awk -F '"' '{print $4}')"
 file_sh="Xray-linux-${arch_sh}.zip"
 url_sh="${link_sh}/${tag_sh}/${file_sh}"
-path_sh="/etc/allinone/${name_sh}"
+path_sh="/usr/local/bin/${name_sh}"
 grep_sh="$(ps -ef | grep $name_sh | grep -v grep | awk '{print $8}')"
 
 sh_config(){
