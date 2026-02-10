@@ -28,7 +28,7 @@ sh_config(){
   private_sh="$(echo "$x25519_sh" | grep 'PrivateKey' | awk '{print $2}')"
   public_sh="$(echo "$x25519_sh" | grep 'Password' | awk '{print $2}')"
   servername_sh="speed.cloudflare.com"
-  cat > ${path_sh}/config.json << REALITYXHTTP
+  cat > ${path_sh}/realityxhttp.json << REALITYXHTTP
 {
     "log": {
         "loglevel": "warning",
@@ -108,7 +108,7 @@ sh_config(){
                         "id": "$uuid_sh",
                         "flow": ""
 						"level": 0,
-						"email": "vless@reality.xhttp"
+						"email": "xray@reality.xhttp"
                     }
                 ],
                 "decryption": "none"
@@ -199,7 +199,7 @@ REALITYXHTTP
                         "id": "$uuid_sh",
                         "flow": "xtls-rprx-vision"
 						"level": 0,
-						"email": "vless@tls.vision"
+						"email": "xray@xtls.vision"
                     }
                 ],
                 "decryption": "none",
@@ -307,7 +307,10 @@ PasswordAuthentication no
 SSHD
 	ufw allow $sshport_sh
 	ufw allow 443
-	ufw allow 80
+	ufw allow 44344
+	ufw allow 44380
+	ufw allow 44381
+	ufw allow 44382
 	echo "y" | ufw enable
 	systemctl restart sshd
   fi
