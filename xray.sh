@@ -25,8 +25,9 @@ grep_sh="$(ps -ef | grep $name_sh | grep -v grep | awk '{print $8}')"
 sh_config(){
   uuid_sh="$(xray uuid)"
   x25519_sh="$(xray x25519)"
-  private_sh="$$(echo "$x25519_sh" | grep 'PrivateKey' | awk '{print $2}')"
+  private_sh="$(echo "$x25519_sh" | grep 'PrivateKey' | awk '{print $2}')"
   public_sh="$(echo "$x25519_sh" | grep 'Password' | awk '{print $2}')"
+  servername_sh="speed.cloudflare.com"
   cat > ${path_sh}/config.json << JSON
 {
     "log": {
@@ -66,7 +67,7 @@ sh_config(){
                     "dokodemo-in"
                 ],
                 "domain": [
-                    "speed.cloudflare.com" // 需要和 realitySettings 的 serverNames 保持一致
+                    "$servername_sh" // 需要与realitySettings的serverNames保持一致
                 ],
                 "outboundTag": "direct"
             },
@@ -85,7 +86,7 @@ sh_config(){
             "port": 44344, // 需要和 reality 入站 target 保持一致
             "protocol": "dokodemo-door",
             "settings": {
-                "address": "speed.cloudflare.com", // 不被偷跑流量speed.cloudflare.com
+                "address": "$servername_sh", // speed.cloudflare.com不会被偷跑流量，需要与realitySettings的serverNames保持一致
                 "port": 443,
                 "network": "tcp"
             },
@@ -113,18 +114,17 @@ sh_config(){
             "streamSettings": {
                 "network": "xhttp",
                 "xhttpSettings": {
-                    "path": "/speedcloudflarecom"
+                    "path": "/${servername_sh}"
                 },
                 "security": "reality",
                 "realitySettings": {
                     "target": "127.0.0.1:44344", // 指向前面 dokodemo-door 入站
                     "serverNames": [
-                        "speed.cloudflare.com"
+                        "$servername_sh"
                     ],
                     "privateKey": "$private_sh",
                     "shortIds": [
-                        "1a2b3c4d5e6f",
-                        "a1b2c3d4e5f6"
+                        "$shortid_sh",
                     ]
                 }
             },
