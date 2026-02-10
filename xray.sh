@@ -28,7 +28,7 @@ sh_config(){
   private_sh="$(echo "$x25519_sh" | grep 'PrivateKey' | awk '{print $2}')"
   public_sh="$(echo "$x25519_sh" | grep 'Password' | awk '{print $2}')"
   servername_sh="speed.cloudflare.com"
-  cat > ${path_sh}/config.json << JSON
+  cat > ${path_sh}/config.json << REALITYXHTTP
 {
     "log": {
         "loglevel": "warning",
@@ -100,13 +100,15 @@ sh_config(){
         },
         {
             "listen": "0.0.0.0",
-            "port": 443,
+            "port": 44380,
             "protocol": "vless",
             "settings": {
                 "clients": [
                     {
                         "id": "$uuid_sh",
                         "flow": ""
+						"level": 0,
+						"email": "vless@reality.xhttp"
                     }
                 ],
                 "decryption": "none"
@@ -149,7 +151,113 @@ sh_config(){
         }
     ]
 }
-JSON
+REALITYXHTTP
+  cat > ${path_sh}/config.json << TLSVISION
+{
+    "log": {
+        "loglevel": "warning",
+        "access": "${path_sh}/access.log",
+        "error": "${path_sh}/error.log"
+    },
+    "dns": {
+        "servers": [
+            "https+local://1.1.1.1/dns-query", // 首选 1.1.1.1 的 DoH 查询，牺牲速度但可防止 ISP 偷窥
+            "localhost"
+        ]
+    },
+    "routing": {
+        "domainStrategy": "IPIfNonMatch",
+        "rules": [
+            {
+                "ip": [
+                    "geoip:cn"
+                ],
+                "outboundTag": "block"
+            },
+            {
+                "domain": [
+                    "geosite:cn"
+                ],
+                "outboundTag": "block"
+            },
+            {
+                "domain": [
+                    "geosite:category-ads-all"
+                ],
+                "outboundTag": "block"
+            }
+        ]
+    },
+    "inbounds": [
+        {
+            "listen": "0.0.0.0",
+            "port": 443,
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "$uuid_sh",
+                        "flow": "xtls-rprx-vision"
+						"level": 0,
+						"email": "vless@tls.vision"
+                    }
+                ],
+                "decryption": "none",
+                "fallbacks": [
+                    {
+                        "dest": "44381",
+                        "xver": 1
+                    },
+                    {
+                        "alpn": "h2",
+                        "dest": "44382",
+                        "xver": 1
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "tls",
+                "tlsSettings": {
+                    "rejectUnknownSni": true,
+                    "minVersion": "1.2",
+                    "certificates": [
+                        {
+                            "certificateFile": "/etc/letsencrypt/live/${domain_sh}/fullchain.cer",
+                            "keyFile": "/etc/letsencrypt/live/${domain_sh}/privkey.pem"
+                        }
+                    ]
+                }
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls"
+                ]
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "protocol": "freedom",
+            "tag": "direct"
+        },
+        {
+            "protocol": "blackhole",
+            "tag": "block"
+        }
+    ],
+    "policy": {
+        "levels": {
+            "0": {
+                "statsUserUplink": true,
+                "statsUserDownlink": true
+            }
+        }
+    }
+}
+TLSVISION
 }
 
 sh_service(){
