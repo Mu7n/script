@@ -67,7 +67,7 @@ sh_config(){
                     "dokodemo-in"
                 ],
                 "domain": [
-                    "$servername_sh" // 需要与realitySettings的serverNames保持一致
+                    "$servername_sh" // 需要和 realitySettings 的 serverNames 保持一致
                 ],
                 "outboundTag": "direct"
             },
@@ -83,14 +83,14 @@ sh_config(){
         {
             "listen": "127.0.0.1",
             "tag": "dokodemo-in",
-            "port": 44344, // 需要和 reality 入站 target 保持一致
+            "port": 44344, // 需要和 realitySettings 的 target 保持一致
             "protocol": "dokodemo-door",
             "settings": {
-                "address": "$servername_sh", // speed.cloudflare.com不会被偷跑流量，需要与realitySettings的serverNames保持一致
+                "address": "$servername_sh", // speed.cloudflare.com 不会被偷跑流量，需要和 realitySettings 的 serverNames 保持一致
                 "port": 443,
                 "network": "tcp"
             },
-            "sniffing": { // 勿动
+            "sniffing": { // 重要，勿动
                 "enabled": true,
                 "destOverride": [
                     "tls"
@@ -124,7 +124,7 @@ sh_config(){
                     ],
                     "privateKey": "$private_sh",
                     "shortIds": [
-                        "$shortid_sh",
+                        "$shortid_sh"
                     ]
                 }
             },
@@ -132,8 +132,7 @@ sh_config(){
                 "enabled": true,
                 "destOverride": [
                     "http",
-                    "tls",
-                    "quic"
+                    "tls"
                 ],
                 "routeOnly": true
             }
