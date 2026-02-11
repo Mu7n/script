@@ -96,7 +96,6 @@ server {
 server {
     listen unix:/dev/shm/uds4430.sock ssl proxy_protocol default_server;
     http2 on;
-    listen unix:/dev/shm/uds4430.sock ssl http2 proxy_protocol default_server;
     set_real_ip_from unix:;
     real_ip_header proxy_protocol;
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -107,7 +106,6 @@ server {
     listen [::]:443 quic reuseport;
     listen unix:/dev/shm/uds4430.sock ssl proxy_protocol;
     http2 on;
-    listen unix:/dev/shm/uds4430.sock ssl http2 proxy_protocol;
     set_real_ip_from unix:;
     real_ip_header proxy_protocol;
     server_name $domain_sh;
