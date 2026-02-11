@@ -513,6 +513,6 @@ else
   sh_sshd
 fi
 
-echo "q" | service $name_sh status | ufw status
+ufw status | echo "q" | service $name_sh status
 
 purple "\nEND！"
