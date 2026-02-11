@@ -515,7 +515,6 @@ else
   sh_sshd
 fi
 
-service $name_sh status
-ufw status
+echo "q" | service $name_sh status | ufw status
 
 purple "\nEND！"
