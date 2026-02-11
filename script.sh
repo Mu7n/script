@@ -45,7 +45,7 @@ api_sh="https://api.github.com/repos/XTLS/Xray-core/releases/latest"
 tag_sh="$(curl -s $api_sh | grep 'tag_name' | awk -F '"' '{print $4}')"
 file_sh="Xray-linux-${arch_sh}.zip"
 url_sh="${link_sh}/${tag_sh}/${file_sh}"
-path_sh="/etc/ALLINONE/${name_sh}"
+path_sh="/etc/AIO/${name_sh}"
 grep_sh="$(ps -ef | grep $name_sh | grep -v grep | awk '{print $8}')"
 servername_sh="speed.cloudflare.com"
 shortid_sh="1a2b3c4d5e6f"
@@ -436,10 +436,12 @@ sh_domain(){
 }
 
 sh_cert(){
-  blue "申请SSL证书。"
-  certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain_sh
-  nginx -t && nginx -s reload
-  purple "Nginx配置完成！"
+  if [ ! -s /etc/letsencrypt/live ]; then
+    blue "申请SSL证书。"
+	certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/html -m ssl@cert.bot -d $domain_sh
+	nginx -t && nginx -s reload
+	purple "Nginx配置完成！"
+  fi
 }
 
 sh_renewal(){
