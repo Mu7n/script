@@ -34,7 +34,7 @@ auth.method = "token"
 auth.token = "$token_sh"
 
 webServer.addr = "0.0.0.0"
-webServer.port = 44380
+webServer.port = 60080
 webServer.user = "$USERNAME"
 webServer.password = "$PASSWORD"
 #webServer.tls.certFile = "/etc/letsencrypt/live/\${domain_sh}/fullchain.pem"
@@ -111,8 +111,8 @@ PubkeyAuthentication yes
 PasswordAuthentication no
 SSHD
 	ufw allow $sshport_sh
+	ufw allow 60080
 	ufw allow 60443
-	ufw allow 44380
 	echo "y" | ufw enable
 	systemctl restart sshd
   fi
