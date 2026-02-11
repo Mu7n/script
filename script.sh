@@ -513,6 +513,6 @@ else
   sh_sshd
 fi
 
-ufw status | echo "q" | service $name_sh status
+ufw status | systemctl --no-pager status $name_sh
 
 purple "\nEND！"
