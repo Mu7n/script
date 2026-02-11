@@ -465,7 +465,7 @@ sh_file(){
   mkdir -p -m 644 $path_sh
   unzip -oj $file_sh -d $path_sh
   rm -rf ${file_sh}
-  ln -s ${path_sh}/${name_sh} /usr/local/bin
+  ln -sf ${path_sh}/${name_sh} /usr/local/bin
 }
 
 sh_sshd(){
@@ -512,7 +512,7 @@ else
   sh_sshd
 fi
 
-ufw status
 service $name_sh status
+ufw status
 
 purple "\nEND！"
