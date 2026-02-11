@@ -445,7 +445,6 @@ sh_cert(){
 }
 
 sh_renewal(){
-if [ -s /etc/letsencrypt/live ]; then
   domain_sh="$(ls -l /etc/letsencrypt/live | awk '/^d/ {print $NF}')"
   while true; do
     purple "检测到已有$domain_sh证书。"
@@ -460,7 +459,6 @@ if [ -s /etc/letsencrypt/live ]; then
 	  *) red "错误，请重新输入！"; continue;;
 	esac
   done
-fi
 }
 
 sh_file(){
@@ -501,7 +499,7 @@ if [ -s ${path_sh}/${name_sh} ]; then
 	readp "请输入选项：" option_sh
 	case $option_sh in
 	  1) if [ ! -z $tag_sh ]; then sh_file; sh_service; fi; break;;
-	  2) sh_renewal; break;;
+	  2) if [ ! -s /etc/letsencrypt/live ]; then sh_apt; sh_domain; sh_nginx; sh_cert; break; else sh_renewal; fi; continue;;
 	  3) blue "退出。"; break;;
 	  *) red "错误，请重新输入！"; continue;;
 	esac
