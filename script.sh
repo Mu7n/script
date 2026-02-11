@@ -48,6 +48,7 @@ url_sh="${link_sh}/${tag_sh}/${file_sh}"
 path_sh="/etc/ALLINONE/${name_sh}"
 grep_sh="$(ps -ef | grep $name_sh | grep -v grep | awk '{print $8}')"
 servername_sh="speed.cloudflare.com"
+shortid_sh="1a2b3c4d5e6f"
   
 sh_nginx(){
   cat > /etc/nginx/nginx.conf << 'CONFIG'
@@ -67,7 +68,6 @@ http {
     default_type application/octet-stream;
     sendfile on;
     keepalive_timeout 65;
-    access_log /var/log/nginx/access.log main;
     log_format main '$client_ip - $remote_user [$time_local] "$request"'
                     '$status $body_bytes_sent "$http_referer"'
                     '"$http_user_agent" "$http_x_forwarded_for"';
@@ -75,6 +75,7 @@ http {
         "" $remote_addr;
         "~*(?P<firstAddr>([0-9a-f]{0,4}:){1,7}[0-9a-f]{1,4}|([0-9]{1,3}\.){3}[0-9]{1,3})$" $firstAddr;
     } # 创建自定义变量 $client_ip 实现使用 CDN 后也能获取到客户端真实 IP
+    access_log /var/log/nginx/access.log main;
     include /etc/nginx/conf.d/*.conf;
 }
 CONFIG
