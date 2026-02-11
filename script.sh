@@ -41,122 +41,73 @@ nginx_config(){
 user www-data;
 pid /run/nginx.pid;
 worker_processes auto;
-worker_rlimit_nofile 65535;
+error_log /var/log/nginx/error.log;
 include /etc/nginx/modules-enabled/*.conf;
 events {
     multi_accept on;
-    worker_connections 65535;
+    worker_connections 1024;
 }
 http {
     charset utf-8;
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
     server_tokens off;
-    log_not_found off;
-    types_hash_max_size 2048;
-    types_hash_bucket_size 64;
-    client_max_body_size 16M;
     include mime.types;
     default_type application/octet-stream;
-    access_log off;
-    error_log /dev/null;
-    ssl_session_timeout 1d;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_tickets off;
-    ssl_dhparam /etc/nginx/dhparam.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
-    limit_req_log_level warn;
-    limit_req_zone $binary_remote_addr zone=login:10m rate=10r/m;
-    gzip on;
-    gzip_vary on;
-    gzip_proxied any;
-    gzip_comp_level 6;
-    gzip_types text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Permissions-Policy "interest-cohort=()" always;
-    add_header Referrer-Policy "no-referrer-when-downgrade" always;
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-    add_header Content-Security-Policy "default-src 'self' http: https: ws: wss: data: blob: 'unsafe-inline'; frame-ancestors 'self';" always;
+    sendfile on;
+    keepalive_timeout 65;
+    access_log /var/log/nginx/access.log main;
+    log_format main '$client_ip - $remote_user [$time_local] "$request"'
+                    '$status $body_bytes_sent "$http_referer"'
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+    map $http_x_forwarded_for $client_ip {
+        "" $remote_addr;
+        "~*(?P<firstAddr>([0-9a-f]{0,4}:){1,7}[0-9a-f]{1,4}|([0-9]{1,3}\.){3}[0-9]{1,3})$" $firstAddr;
+    } # 创建自定义变量 $client_ip 实现使用 CDN 后也能获取到客户端真实 IP
     include /etc/nginx/conf.d/*.conf;
-    include /etc/nginx/sites-enabled/*;
 }
 CONFIG
 
-  cat > /etc/nginx/conf.d/FLO.conf << FLO
-server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-    server_name $domain_sh;
-    root /etc/nginx/Mu;
-    ssl_certificate /etc/letsencrypt/live/${domain_sh}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/${domain_sh}/privkey.pem;
-    location / {
-        proxy_pass http://127.0.0.1:44380;
-        proxy_set_header Host \$host;
-        proxy_http_version 1.1;
-        proxy_ssl_server_name on;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-Host \$host;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header X-Forwarded-Port \$server_port;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-    }
-    location = /favicon.ico {
-        log_not_found off;
-    }
-    location = /robots.txt {
-        log_not_found off;
-    }
-    location ~ /\.(?!well-known) {
-        deny all;
-    }
-    access_log /var/log/nginx/access.log combined buffer=512k flush=1m;
-    error_log  /var/log/nginx/error.log warn;
-}
+  cat > /etc/nginx/conf.d/reality-vision-xhttp.conf << XHRV
 server {
     listen 80;
     listen [::]:80;
+    return 301 https://\$host\$request_uri;
+}
+server {
+    listen unix:/dev/shm/uds4430.sock ssl proxy_protocol default_server;
+    http2 on;
+    listen unix:/dev/shm/uds4430.sock ssl http2 proxy_protocol default_server;
+    set_real_ip_from unix:;
+    real_ip_header proxy_protocol;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_reject_handshake on;
+} # 限定域名连接（包括禁止以 IP 方式访问网站）
+server {
+    listen 443 quic reuseport;
+    listen [::]:443 quic reuseport;
+    listen unix:/dev/shm/uds4430.sock ssl proxy_protocol;
+    http2 on;
+    listen unix:/dev/shm/uds4430.sock ssl http2 proxy_protocol;
+    set_real_ip_from unix:;
+    real_ip_header proxy_protocol;
     server_name $domain_sh;
-    return 301 https://${domain_sh}\$request_uri;
-    location ^~ /.well-known/acme-challenge/ {
-        root /var/www/html;
-    }
-}
-server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-    server_name *.$domain_sh;
-    return 301 https://${domain_sh}\$request_uri;
     ssl_certificate /etc/letsencrypt/live/${domain_sh}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${domain_sh}/privkey.pem;
+    ssl_prefer_server_ciphers on;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+    location /${servername_sh} {
+        grpc_pass grpc://unix:/dev/shm/uds4438.sock;
+        grpc_set_header Host \$host;
+        grpc_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    } # VLESS+XHTTP 中 listen 和 path 一致
+    location / {
+        add_header Alt-Svc 'h3=":443"; ma=86400';
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+        root /etc/nginx/Mu;
+        index index.html index.htm;
+    } # 通告 HTTP/3 server 的可用性
 }
-FLO
-
-  cat > /etc/nginx/sites-available/default << DEFAULT
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-    server_name _;
-    return 444;
-}
-server {
-    listen 443 default_server;
-    listen [::]:443 default_server;
-    server_name _;
-    return 444;
-    ssl_certificate /etc/letsencrypt/live/${domain_sh}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/${domain_sh}/privkey.pem;
-}
-DEFAULT
+XHRV
 }
 
 read_domain(){
