@@ -453,8 +453,8 @@ sh_renewal(){
 	blue "3、退出"
 	readp "请输入选项：" option_sh
 	case $option_sh in
-	  1) blue "更新SSL证书。"; sh_nginx; sh_cert; break;;
-	  2) blue "更改SSL证书。"; rm -rf /etc/letsencrypt/{live,renewal,archive}; rm -rf /etc/nginx/conf.d/${name_sh}.conf; sh_domain; sh_nginx; sh_cert; break;;
+	  1) sh_nginx; sh_cert; break;;
+	  2) rm -rf /etc/letsencrypt/{live,renewal,archive}; rm -rf /etc/nginx/conf.d/${name_sh}.conf; sh_domain; sh_nginx; sh_cert; break;;
 	  3) blue "退出。"; break;;
 	  *) red "错误，请重新输入！"; continue;;
 	esac
