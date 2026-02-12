@@ -437,7 +437,7 @@ sh_domain(){
 sh_cert(){
   if [ ! -s /etc/letsencrypt/live ]; then
     blue "申请SSL证书。"
-	certbot certonly --webroot --force-renewal --agree-tos -n -w /etc/nginx/Mu -m ssl@cert.bot -d $domain_sh
+	certbot certonly --webroot --force-renewal --agree-tos -n -w /usr/share/nginx/html -m ssl@cert.bot -d $domain_sh
 	nginx -t && nginx -s reload
 	purple "Nginx配置完成！"
   fi
