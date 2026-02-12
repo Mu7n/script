@@ -56,7 +56,6 @@ user nginx;
 pid /run/nginx.pid;
 worker_processes auto;
 error_log /var/log/nginx/error.log;
-include /etc/nginx/modules-enabled/*.conf;
 events {
     multi_accept on;
     worker_connections 1024;
