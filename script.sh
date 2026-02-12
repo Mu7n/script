@@ -214,8 +214,8 @@ sh_xray(){
                     {
                         "id": "$uuid_sh",
                         "flow": "",
-						"level": 0,
-						"email": "xray@reality.xhttp"
+                        "level": 0,
+                        "email": "xray@reality.xhttp"
                     }
                 ],
                 "decryption": "none"
