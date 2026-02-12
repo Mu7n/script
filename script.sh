@@ -91,6 +91,8 @@ server {
     listen 80;
     listen [::]:80;
     return 301 https://\$host\$request_uri;
+	location ^~ /.well-known/acme-challenge/ {
+    root /etc/nginx/Mu;
 }
 server {
     listen unix:/dev/shm/uds4430.sock ssl proxy_protocol default_server;
