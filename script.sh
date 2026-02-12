@@ -321,7 +321,9 @@ REALITYXHTTP
                 "fallbacks": [
                     {
                         "dest": "/dev/shm/uds4438.sock"
-                    },
+                    }
+                ]
+            },
             "streamSettings": {
                 "network": "raw",
                 "security": "reality",
