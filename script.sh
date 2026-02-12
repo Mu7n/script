@@ -404,7 +404,7 @@ Description=$name_sh Service
 After=network.target nss-lookup.target
 
 [Service]
-ExecStart=${path_sh}/${name_sh} run -confdir ${path_sh}
+ExecStart=${path_sh}/${name_sh} run -c ${path_sh}/realityvision.json 
 Restart=on-failure
 RestartPreventExitStatus=23
 LimitNPROC=10000
