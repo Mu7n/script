@@ -434,7 +434,7 @@ sh_apt(){
 	echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/ubuntu `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
 	echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx
   fi
-  if {[ ! type nginx || ! type certbot || ! type unzip || ! type ufw ] >/dev/null 2>&1}; then
+  if ! type "nginx" "certbot" "unzip" "ufw" >/dev/null 2>&1}; then
   apt-get update && apt install -y ufw unzip certbot nginx
   fi
 }
@@ -449,7 +449,7 @@ sh_cert(){
   if [ ! -s /etc/letsencrypt/live ]; then
     blue "申请SSL证书。"
     certbot certonly --webroot --force-renewal --agree-tos -n -w /etc/nginx/Mu -m ssl@cert.bot -d $domain_sh
-    sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g; s/server \{\n    ssl off;/server \{/g' /etc/nginx/conf.d/default.conf
+    if [ $? == 0 ]; then sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g; s/server \{\n    ssl off;/server \{/g' /etc/nginx/conf.d/default.conf fi
     nginx -t && nginx -s reload
     purple "Nginx配置完成！"
   fi
