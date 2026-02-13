@@ -101,8 +101,8 @@ server {
     http2 on;
     set_real_ip_from unix:;
     real_ip_header proxy_protocol;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_reject_handshake on;
+    #ssl_protocols TLSv1.2 TLSv1.3;
+    #ssl_reject_handshake on;
 } # 限定域名连接（包括禁止以 IP 方式访问网站）
 server {
     ssl off;
@@ -434,7 +434,7 @@ sh_apt(){
 	echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/ubuntu `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
 	echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx
   fi
-  if [ ! type nginx || ! type certbot || ! type unzip || ! type ufw ] >/dev/null 2>&1; then
+  if {[ ! type nginx || ! type certbot || ! type unzip || ! type ufw ] >/dev/null 2>&1}; then
   apt-get update && apt install -y ufw unzip certbot nginx
   fi
 }
@@ -448,9 +448,10 @@ sh_domain(){
 sh_cert(){
   if [ ! -s /etc/letsencrypt/live ]; then
     blue "申请SSL证书。"
-	certbot certonly --webroot --force-renewal --agree-tos -n -w /etc/nginx/Mu -m ssl@cert.bot -d $domain_sh
-	nginx -t && nginx -s reload
-	purple "Nginx配置完成！"
+    certbot certonly --webroot --force-renewal --agree-tos -n -w /etc/nginx/Mu -m ssl@cert.bot -d $domain_sh
+    sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g; s/server \{\n    ssl off;/server \{/g' /etc/nginx/conf.d/default.conf
+    nginx -t && nginx -s reload
+    purple "Nginx配置完成！"
   fi
 }
 
