@@ -86,7 +86,7 @@ TARGZ
     base64 -d /etc/nginx/Mu.txt > /etc/nginx/Mu.tar.gz
 	tar -xzvf /etc/nginx/Mu.tar.gz -C /etc/nginx
   fi
-  cat > /etc/nginx/conf.d/${name_sh}.conf << DEST
+  cat > /etc/nginx/conf.d/default.conf << DEST
 server {
     listen 80;
     listen [::]:80;
