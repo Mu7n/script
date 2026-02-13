@@ -96,7 +96,8 @@ server {
     }
 }
 server {
-    listen unix:/dev/shm/uds4430.sock ssl proxy_protocol default_server;
+    ssl off;
+    listen unix:/dev/shm/uds4430.sock; #ssl proxy_protocol default_server;
     http2 on;
     set_real_ip_from unix:;
     real_ip_header proxy_protocol;
@@ -104,18 +105,19 @@ server {
     ssl_reject_handshake on;
 } # 限定域名连接（包括禁止以 IP 方式访问网站）
 server {
+    ssl off;
     listen 443 quic reuseport;
     listen [::]:443 quic reuseport;
-    listen unix:/dev/shm/uds4430.sock ssl proxy_protocol;
+    listen unix:/dev/shm/uds4430.sock; #ssl proxy_protocol;
     http2 on;
     set_real_ip_from unix:;
     real_ip_header proxy_protocol;
     server_name $domain_sh;
-    ssl_certificate /etc/letsencrypt/live/${domain_sh}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/${domain_sh}/privkey.pem;
-    ssl_prefer_server_ciphers on;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+    #ssl_certificate /etc/letsencrypt/live/${domain_sh}/fullchain.pem;
+    #ssl_certificate_key /etc/letsencrypt/live/${domain_sh}/privkey.pem;
+    #ssl_prefer_server_ciphers on;
+    #ssl_protocols TLSv1.2 TLSv1.3;
+    #ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
     location /${servername_sh} {
         grpc_pass grpc://unix:/dev/shm/uds4438.sock;
         grpc_set_header Host \$host;
