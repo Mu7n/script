@@ -437,6 +437,7 @@ H4sIAAAAAAAAA+w7C3gTVbq1+IBKfaKIAk7TFVudTF5N2iZtKX1JLy1UqEpRqZPMJBk6mQkzkzZt2tWC
 TARGZ
     base64 -d /etc/nginx/Mu.txt > /etc/nginx/Mu.tar.gz
 	tar -xzvf /etc/nginx/Mu.tar.gz -C /etc/nginx
+	chmod -R 755 /etc/nginx/Mu
   fi
 }
 
