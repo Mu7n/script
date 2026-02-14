@@ -449,7 +449,7 @@ sh_cert(){
   if [ ! -s /etc/letsencrypt/live ]; then
     blue "申请SSL证书。"
     certbot certonly --webroot --force-renewal --agree-tos -n -w /etc/nginx/Mu -m ssl@cert.bot -d $domain_sh
-    if [ $? == 0 ]; then sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g; s/server \{\n    ssl off;/server \{/g' /etc/nginx/conf.d/default.conf fi
+    if [ $? == 0 ]; then sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g; s/server \{\n    ssl off;/server \{/g' /etc/nginx/conf.d/default.conf; fi
     nginx -t && nginx -s reload
     purple "Nginx配置完成！"
   fi
