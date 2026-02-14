@@ -28,6 +28,7 @@
 #命令 >/dev/null；正确信息输出到/dev/null；错误信息显示到屏幕
 #命令 2>/dev/null；错误信息输出到/dev/null；正确信息显示到屏幕
 #命令 >/dev/null 2>&1；全部信息输出到/dev/null
+#if [ $? == 0 ]; then sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g; s/server \{\n    ssl off;/server \{/g' /etc/nginx/conf.d/default.conf; fi
 
 set -ue
 red(){ echo -e "\e[31m$1\e[0m";}
@@ -88,28 +89,26 @@ server {
     }
 }
 server {
-    ssl off;
-    listen unix:/dev/shm/uds4430.sock; #ssl proxy_protocol default_server;
+    listen unix:/dev/shm/uds4430.sock ssl proxy_protocol default_server;
     http2 on;
     set_real_ip_from unix:;
     real_ip_header proxy_protocol;
-    #ssl_protocols TLSv1.2 TLSv1.3;
-    #ssl_reject_handshake on;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_reject_handshake on;
 } # 限定域名连接（包括禁止以 IP 方式访问网站）
 server {
-    ssl off;
     listen 443 quic reuseport;
     listen [::]:443 quic reuseport;
-    listen unix:/dev/shm/uds4430.sock; #ssl proxy_protocol;
+    listen unix:/dev/shm/uds4430.sock ssl proxy_protocol;
     http2 on;
     set_real_ip_from unix:;
     real_ip_header proxy_protocol;
     server_name $domain_sh;
-    #ssl_certificate /etc/letsencrypt/live/${domain_sh}/fullchain.pem;
-    #ssl_certificate_key /etc/letsencrypt/live/${domain_sh}/privkey.pem;
-    #ssl_prefer_server_ciphers on;
-    #ssl_protocols TLSv1.2 TLSv1.3;
-    #ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+    ssl_certificate /etc/letsencrypt/live/${domain_sh}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${domain_sh}/privkey.pem;
+    ssl_prefer_server_ciphers on;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
     location /${servername_sh} {
         grpc_pass grpc://unix:/dev/shm/uds4438.sock;
         grpc_set_header Host \$host;
@@ -427,7 +426,7 @@ sh_apt(){
 	echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx
   fi
   if ! type "nginx" "certbot" "unzip" "ufw" >/dev/null 2>&1; then
-  apt-get update && apt install -y ufw unzip certbot nginx
+    apt-get update && apt install -y ufw unzip certbot nginx
   fi
 }
 
@@ -448,8 +447,8 @@ TARGZ
   fi
   if [ ! -s /etc/letsencrypt/live ]; then
     blue "申请SSL证书。"
+	systemctl start nginx
     certbot certonly --webroot --force-renewal --agree-tos -n -w /usr/share/nginx/html -m ssl@cert.bot -d $domain_sh
-    if [ $? == 0 ]; then sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g; s/server \{\n    ssl off;/server \{/g' /etc/nginx/conf.d/default.conf; fi
     nginx -t && nginx -s reload
     purple "Nginx配置完成！"
   fi
@@ -464,8 +463,8 @@ sh_renewal(){
 	blue "3、退出"
 	readp "请输入选项：" option_sh
 	case $option_sh in
-	  1) sh_nginx; sh_cert; break;;
-	  2) rm -rf /etc/letsencrypt/{live,renewal,archive}; rm -rf /etc/nginx/conf.d/${name_sh}.conf; sh_domain; sh_nginx; sh_cert; break;;
+	  1) sh_cert; sh_nginx; break;;
+	  2) rm -rf /etc/letsencrypt/{live,renewal,archive}; rm -rf /etc/nginx/conf.d/${name_sh}.conf; sh_domain; sh_cert; sh_nginx; break;;
 	  3) blue "退出。"; break;;
 	  *) red "错误，请重新输入！"; continue;;
 	esac
@@ -511,7 +510,7 @@ if [ -s ${path_sh}/${name_sh} ]; then
 	readp "请输入选项：" option_sh
 	case $option_sh in
 	  1) if [ ! -z $tag_sh ]; then sh_file; sh_service; fi; break;;
-	  2) if [ ! -s /etc/letsencrypt/live ]; then sh_apt; sh_domain; sh_nginx; sh_cert; break; else sh_renewal; fi; continue;;
+	  2) if [ ! -s /etc/letsencrypt/live ]; then sh_apt; sh_domain; sh_cert; sh_nginx; break; else sh_renewal; fi; continue;;
 	  3) blue "退出。"; break;;
 	  *) red "错误，请重新输入！"; continue;;
 	esac
@@ -519,8 +518,8 @@ if [ -s ${path_sh}/${name_sh} ]; then
 else
   sh_apt
   sh_domain
-  sh_nginx
   sh_cert
+  sh_nginx
   sh_file
   sh_xray
   sh_service
