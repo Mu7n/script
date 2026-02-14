@@ -361,7 +361,8 @@ REALITYXHTTP
                 "network": "xhttp",
                 "xhttpSettings": {
                     "path": "/${servername_sh}"
-                },
+                }
+            },
             "sniffing": {
                 "enabled": true,
                 "destOverride": [
