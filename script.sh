@@ -494,7 +494,7 @@ PubkeyAuthentication yes
 PasswordAuthentication no
 SSHD
 	ufw allow $sshd_sh
-	ufw allow "Nginx Full"
+	ufw allow 443
 	ufw allow 44344
 	ufw allow 44380
 	echo "y" | ufw enable
