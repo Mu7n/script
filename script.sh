@@ -434,7 +434,7 @@ sh_apt(){
 	echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/ubuntu `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
 	echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx
   fi
-  if ! type "nginx" "certbot" "unzip" "ufw" >/dev/null 2>&1}; then
+  if ! type "nginx" "certbot" "unzip" "ufw" >/dev/null 2>&1; then
   apt-get update && apt install -y ufw unzip certbot nginx
   fi
 }
