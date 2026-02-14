@@ -104,6 +104,7 @@ server {
     set_real_ip_from unix:;
     real_ip_header proxy_protocol;
     server_name $domain_sh;
+    root /etc/nginx/Mu;
     ssl_certificate /etc/letsencrypt/live/${domain_sh}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${domain_sh}/privkey.pem;
     ssl_prefer_server_ciphers on;
