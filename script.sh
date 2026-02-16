@@ -51,7 +51,7 @@ grep_sh="$(ps -ef | grep $name_sh | grep -v grep | awk '{print $8}')"
 servername_sh="speed.cloudflare.com"
 shortid_sh="1a2b3c4d5e6f"
   
-sh_nginx(){
+sh_confnginx(){
   cat > /etc/nginx/nginx.conf << 'CONFIG'
 user nginx;
 pid /run/nginx.pid;
@@ -127,7 +127,7 @@ DEST
     purple "Nginx配置完成！"
 }
 
-sh_xray(){
+sh_confxray(){
   uuid_sh="$(xray uuid)"
   x25519_sh="$(xray x25519)"
   private_sh="$(echo "$x25519_sh" | grep 'PrivateKey' | awk '{print $2}')"
@@ -396,7 +396,7 @@ REALITYXHTTP
 REALITYVISION
 }
 
-sh_service(){
+sh_servicexray(){
   if [ ! -z $grep_sh ]; then pkill -9 $name_sh; fi
   cat > /etc/systemd/system/${name_sh}.service << XRAY
 [Unit]
@@ -422,16 +422,6 @@ XRAY
 }
 
 sh_apt(){
-  if [ ! -s /etc/apt/preferences.d/99nginx ]; then
-	curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
-	#gpg --dry-run --quiet --no-keyring --import --import-options import-show /usr/share/keyrings/nginx-archive-keyring.gpg
-	echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/ubuntu `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
-	echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx
-  fi
-  if ! type "nginx" "certbot" "unzip" "ufw" >/dev/null 2>&1; then
-    blue "开始安装。"
-    apt-get update && apt install -y ufw unzip certbot nginx
-  fi
   if [ ! -s /etc/nginx/Mu ]; then
     blue "解压html。"
 	cat > /etc/nginx/Mu.txt << 'TARGZ'
@@ -457,24 +447,7 @@ sh_cert(){
   fi
 }
 
-sh_renewal(){
-  domain_sh="$(ls -l /etc/letsencrypt/live | awk '/^d/ {print $NF}')"
-  while true; do
-    purple "检测到已有$domain_sh证书。"
-	blue "1、更新域名"
-	blue "2、更改域名"
-	blue "3、退出"
-	readp "请输入选项：" option_sh
-	case $option_sh in
-	  1) sh_cert; sh_nginx; break;;
-	  2) rm -rf /etc/letsencrypt/{live,renewal,archive}; rm -rf /etc/nginx/conf.d/${name_sh}.conf; sh_domain; sh_cert; sh_nginx; break;;
-	  3) blue "退出。"; break;;
-	  *) red "错误，请重新输入！"; continue;;
-	esac
-  done
-}
-
-sh_file(){
+sh_filexray(){
   blue "下载$file_sh"
   curl -OL $url_sh
   if [[ -z $tag_sh || -z $url_sh || ! -s $file_sh ]]; then while true; do blue "重新获取版本。"; if [ -s $file_sh ]; then break; fi; tag_sh="$($tag_sh)"; blue "$tag_sh" sleep 5; curl -OL $url_sh; done fi
@@ -504,31 +477,82 @@ SSHD
   fi
 }
 
-if [ -s ${path_sh}/${name_sh} ]; then
-  while true; do
-    purple "检测到已安装$name_sh。"
-	blue "1、更新"
-	blue "2、域名"
-	blue "3、退出"
-	readp "请输入选项：" option_sh
-	case $option_sh in
-	  1) if [ ! -z $tag_sh ]; then sh_file; sh_service; fi; break;;
-	  2) if [ ! -s /etc/letsencrypt/live ]; then sh_apt; sh_domain; sh_cert; sh_nginx; break; else sh_renewal; fi; continue;;
-	  3) blue "退出。"; break;;
-	  *) red "错误，请重新输入！"; continue;;
-	esac
-  done
-else
-  sh_apt
-  sh_domain
-  sh_cert
-  sh_nginx
-  sh_file
-  sh_xray
-  sh_service
-  sh_sshd
-fi
+sh_menunginx(){
+  if [ -s /etc/letsencrypt/live ]; then
+    domain_sh="$(ls -l /etc/letsencrypt/live | awk '/^d/ {print $NF}')"
+    while true; do
+      purple "检测到已有$domain_sh证书。"
+	    blue "1、更新域名"
+	    blue "2、更改域名"
+	    blue "3、退出"
+      readp "请输入选项：" option_sh
+      case $option_sh in
+        1) sh_cert; sh_nginx; break;;
+        2) rm -rf /etc/letsencrypt/{live,renewal,archive}; rm -rf /etc/nginx/conf.d/${name_sh}.conf; sh_domain; sh_cert; sh_nginx; break;;
+        3) blue "退出。"; break;;
+        *) red "错误，请重新输入！"; continue;;
+      esac
+    done
+  else
+    sh_domain
+    sh_cert
+    sh_confnginx
+    sh_filexray
+    sh_confxray
+    sh_servicexray
+    sh_sshd
+  fi
+}
 
-ufw status | systemctl --no-pager status $name_sh
+sh_menuxray(){
+  if [ -s ${path_sh}/${name_sh} ]; then
+    while true; do
+      purple "检测到已安装$name_sh。"
+      blue "1、更新版本"
+	    blue "2、更改配置"
+	    blue "3、退出"
+      readp "请输入选项：" option_sh
+      case $option_sh in
+        1) if [ ! -z $tag_sh ]; then sh_file; sh_service; fi; break;;
+        2) if [ ! -s /etc/letsencrypt/live ]; then sh_apt; sh_domain; sh_cert; sh_nginx; break; else sh_renewal; fi; continue;;
+        3) blue "退出。"; break;;
+        *) red "错误，请重新输入！"; continue;;
+      esac
+    done
+  else
+    sh_domain
+    sh_cert
+    sh_confnginx
+    sh_filexray
+    sh_confxray
+    sh_servicexray
+    sh_sshd
+  fi
+}
+
+if [ ! -s /etc/apt/preferences.d/99nginx ]; then
+  curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+	#gpg --dry-run --quiet --no-keyring --import --import-options import-show /usr/share/keyrings/nginx-archive-keyring.gpg
+	echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/ubuntu `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
+	echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx
+fi
+if ! type "nginx" "certbot" "unzip" "ufw" >/dev/null 2>&1; then
+  blue "开始安装。"
+  apt-get update && apt install -y ufw unzip certbot nginx
+fi
+while true; do
+  blue "1、Xray"
+  blue "2、Nginx"
+  blue "3、退出"
+  readp "请输入选项：" option_sh
+  case $option_sh in
+    1) sh_menuxray; continue;;
+    2) sh_menunginx; continue;;
+    3) blue "退出。"; break;;
+    *) red "错误，请重新输入！"; continue;;
+  esac
+done
+
+ufw statu | service $name_sh status | echo "q"
 
 purple "\nEND！"
