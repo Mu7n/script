@@ -487,8 +487,8 @@ sh_menunginx(){
 	    blue "3、退出"
       readp "请输入选项：" option_sh
       case $option_sh in
-        1) sh_cert; sh_nginx; break;;
-        2) rm -rf /etc/letsencrypt/{live,renewal,archive}; rm -rf /etc/nginx/conf.d/${name_sh}.conf; sh_domain; sh_cert; sh_nginx; break;;
+        1) sh_cert; sh_confnginx; break;;
+        2) rm -rf /etc/letsencrypt/{live,renewal,archive}; sh_domain; sh_cert; sh_confnginx; break;;
         3) blue "退出。"; break;;
         *) red "错误，请重新输入！"; continue;;
       esac
@@ -513,8 +513,8 @@ sh_menuxray(){
 	    blue "3、退出"
       readp "请输入选项：" option_sh
       case $option_sh in
-        1) if [ ! -z $tag_sh ]; then sh_file; sh_service; fi; break;;
-        2) if [ ! -s /etc/letsencrypt/live ]; then sh_apt; sh_domain; sh_cert; sh_nginx; break; else sh_renewal; fi; continue;;
+        1) if [ ! -z $tag_sh ]; then sh_filexray; sh_servicexray; fi; break;;
+        2) rm -rf /etc/letsencrypt/{live,renewal,archive}; sh_domain; sh_cert; sh_confnginx; sh_confxray; service xray restart; break;;
         3) blue "退出。"; break;;
         *) red "错误，请重新输入！"; continue;;
       esac
