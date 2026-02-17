@@ -456,20 +456,20 @@ sh_filexray(){
 
 sh_sshd(){
   if [ ! -s /etc/ssh/sshd_config.d/SSHD.conf ]; then
-	  readp "请输入SSH端口：" sshd_sh
-	  purple "SSH端口：$sshd_sh"
-	  cat > /etc/ssh/sshd_config.d/SSHD.conf << SSHD
+    readp "请输入SSH端口：" sshd_sh
+    purple "SSH端口：$sshd_sh"
+    cat > /etc/ssh/sshd_config.d/SSHD.conf << SSHD
 Port $sshd_sh
 PermitRootLogin yes
 PubkeyAuthentication yes
 PasswordAuthentication no
 SSHD
-	  ufw allow $sshd_sh
-	  ufw allow 443
-	  ufw allow 44344
-	  ufw allow 44380
-	  echo "y" | ufw enable
-	  systemctl restart ssh
+    ufw allow $sshd_sh
+    ufw allow 443
+    ufw allow 44344
+    ufw allow 44380
+    echo "y" | ufw enable
+    systemctl restart ssh
   fi
 }
 
@@ -478,9 +478,9 @@ sh_menunginx(){
     domain_sh="$(ls -l /etc/letsencrypt/live | awk '/^d/ {print $NF}')"
     while true; do
       purple "检测到已有$domain_sh证书。"
-	    blue "1、更新域名"
-	    blue "2、更改域名"
-	    blue "3、退出"
+      blue "1、更新域名"
+      blue "2、更改域名"
+      blue "3、退出"
       readp "请输入选项：" option_sh
       case $option_sh in
         1) sh_cert; sh_confnginx; exit 0;;
@@ -507,8 +507,8 @@ sh_menuxray(){
     while true; do
       purple "检测到已安装$name_sh。"
       blue "1、更新版本"
-	    blue "2、更改配置"
-	    blue "3、退出"
+      blue "2、更改配置"
+      blue "3、退出"
       readp "请输入选项：" option_sh
       case $option_sh in
         1) if [ ! -z $tag_sh ]; then sh_filexray; sh_servicexray; fi; exit 0;;
@@ -530,9 +530,9 @@ sh_menuxray(){
 
 if [ ! -s /etc/apt/preferences.d/99nginx ]; then
   curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
-	#gpg --dry-run --quiet --no-keyring --import --import-options import-show /usr/share/keyrings/nginx-archive-keyring.gpg
-	echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/ubuntu `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
-	echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx
+  #gpg --dry-run --quiet --no-keyring --import --import-options import-show /usr/share/keyrings/nginx-archive-keyring.gpg
+  echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/ubuntu `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
+  echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx
 fi
 if ! type "nginx" "certbot" "unzip" "ufw" >/dev/null 2>&1; then
   blue "开始安装。"
@@ -551,6 +551,8 @@ while true; do
   esac
 done
 
-ufw statu; service $name_sh status; echo "q"
+ufw statu
+service $name_sh status
+echo "q"
 
 purple "\nEND！"
