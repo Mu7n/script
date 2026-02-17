@@ -512,7 +512,7 @@ sh_menuxray(){
       readp "请输入选项：" option_sh
       case $option_sh in
         1) if [ ! -z $tag_sh ]; then sh_filexray; sh_servicexray; fi; return;;
-        2) if [ $vision_sh != $domain_sh ]; then sh_confxray; systemctl restart xray; fi; return;;
+        2) if [ $vision_sh != $domain_sh ]; then blue "配置已更新。"; sh_confxray; systemctl restart xray; else blue "None。"; fi; return;;
         3) blue "退出。"; return;;
         *) red "错误，请重新输入！"; continue;;
       esac
