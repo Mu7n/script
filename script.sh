@@ -551,6 +551,6 @@ while true; do
   esac
 done
 
-ufw status; service $name_sh status; q
+ufw status; export SYSTEMD_PAGER=""; service $name_sh status
 
 purple "\nEND！"
