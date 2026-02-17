@@ -551,8 +551,6 @@ while true; do
   esac
 done
 
-ufw statu
-service $name_sh status
-echo "q"
+ufw status; service $name_sh status; echo "q"
 
 purple "\nEND！"
