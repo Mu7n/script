@@ -469,7 +469,7 @@ SSHD
 	  ufw allow 44344
 	  ufw allow 44380
 	  echo "y" | ufw enable
-	  systemctl restart sshd
+	  systemctl restart ssh
   fi
 }
 
