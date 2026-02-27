@@ -52,20 +52,21 @@ shortid_sh="1a2b3c4d5e6f"
   
 sh_confnginx(){
   cat > /etc/nginx/nginx.conf << 'CONFIG'
-user nginx;
+user www-data;
 pid /run/nginx.pid;
 worker_processes auto;
 error_log /var/log/nginx/error.log;
+include /etc/nginx/modules-enabled/*.conf;
 events {
     multi_accept on;
     worker_connections 1024;
 }
 http {
-    charset utf-8;
-    server_tokens off;
     include mime.types;
     default_type application/octet-stream;
+    charset utf-8;
     sendfile on;
+    server_tokens off;
     keepalive_timeout 65;
     log_format main '$client_ip - $remote_user [$time_local] "$request"'
                     '$status $body_bytes_sent "$http_referer"'
@@ -438,10 +439,9 @@ sh_domain(){
 
 sh_cert(){
   blue "申请SSL证书。"
-  mkdir -p /var/www/_letsencrypt && chown nginx /var/www/_letsencrypt
-  systemctl restart nginx
+  mkdir -p /var/www/_letsencrypt && chown www-data /var/www/_letsencrypt
   certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/_letsencrypt -m ssl@cert.bot -d $domain_sh
-  sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g' /etc/nginx/conf.d/default.conf
+  #sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g' /etc/nginx/conf.d/default.conf
   nginx -t && systemctl reload nginx
   purple "Nginx配置完成！"
 }
@@ -519,12 +519,12 @@ sh_menuxray(){
   fi
 }
 
-if [ ! -s /etc/apt/preferences.d/99nginx ]; then
-  curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
-  #gpg --dry-run --quiet --no-keyring --import --import-options import-show /usr/share/keyrings/nginx-archive-keyring.gpg
-  echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/ubuntu `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list >/dev/null
-  echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx >/dev/null
-fi
+#if [ ! -s /etc/apt/preferences.d/99nginx ]; then
+#  curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+#  #gpg --dry-run --quiet --no-keyring --import --import-options import-show /usr/share/keyrings/nginx-archive-keyring.gpg
+#  echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/ubuntu `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list >/dev/null
+#  echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx >/dev/null
+#fi
 if ! type "nginx" "certbot" "unzip" "ufw" >/dev/null 2>&1; then
   blue "开始安装。"
   apt-get update && apt install -y ufw unzip certbot nginx && sh_html
