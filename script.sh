@@ -29,7 +29,7 @@
 #命令 2>/dev/null；错误信息输出到/dev/null；正确信息显示到屏幕
 #命令 >/dev/null 2>&1；全部信息输出到/dev/null
 
-set -ue
+set -u
 red(){ echo -e "\e[31m$1\e[0m";}
 blue(){ echo -e "\e[34m$1\e[0m";}
 purple(){ echo -e "\e[35m$1\e[0m";}
@@ -458,11 +458,11 @@ TEST
 
 sh_filexray(){
   blue "下载$file_sh"
-  curl -OL $url_sh
-  if [[ -z $tag_sh || -z $url_sh || ! -s $file_sh ]]; then while true; do blue "重新获取版本。"; if [ -s $file_sh ]; then break; fi; tag_sh="$($tag_sh)"; blue "$tag_sh" sleep 5; curl -OL $url_sh; done fi
-  blue "提取$file_sh"
   mkdir -p -m 644 $path_sh
+  curl -OL $url_sh
+  blue "提取$file_sh"
   unzip -oj $file_sh -d $path_sh
+  while true; do if [ -s ${path_sh}/${name_sh} ]; then break; fi; tag_sh="$($tag_sh)"; blue "$tag_sh"; sleep 5; curl -OL $url_sh; unzip -oj $file_sh -d $path_sh; done
   rm -rf ${file_sh}
   ln -sf ${path_sh}/${name_sh} /usr/local/bin
 }
@@ -529,12 +529,14 @@ sh_menuxray(){
   fi
 }
 
+#编译 Nginx
 #if [ ! -s /etc/apt/preferences.d/99nginx ]; then
 #  curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
 #  #gpg --dry-run --quiet --no-keyring --import --import-options import-show /usr/share/keyrings/nginx-archive-keyring.gpg
 #  echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/ubuntu `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list >/dev/null
 #  echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx >/dev/null
 #fi
+
 if ! type "nginx" "certbot" "unzip" "ufw" >/dev/null 2>&1; then
   blue "开始安装。"
   apt-get update && apt install -y ufw unzip certbot python3-certbot-nginx nginx
