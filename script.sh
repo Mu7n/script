@@ -122,7 +122,6 @@ server {
     } # 通告 HTTP/3 server 的可用性
 }
 DEST
-  nginx -t && systemctl reload nginx
 }
 
 sh_confxray(){
