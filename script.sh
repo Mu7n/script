@@ -468,16 +468,16 @@ sh_filexray(){
 }
 
 sh_sshd(){
-  if [ ! -s /etc/ssh/sshd_config.d/SSHD.conf ]; then
-    readp "请输入SSH端口：" sshd_sh
-    purple "SSH端口：$sshd_sh"
-    cat > /etc/ssh/sshd_config.d/SSHD.conf << SSHD
-Port $sshd_sh
+  if [ ! -s /etc/ssh/ssh_config.d/SSH.conf ]; then
+    readp "请输入SSH端口：" ssh_sh
+    purple "SSH端口：$ssh_sh"
+    cat > /etc/ssh/ssh_config.d/SSH.conf << SSH
+Port $ssh_sh
 PermitRootLogin yes
 PubkeyAuthentication yes
 PasswordAuthentication no
-SSHD
-    ufw allow $sshd_sh
+SSH
+    ufw allow $ssh_sh
     ufw allow 443
     ufw allow 44344
     ufw allow 44380
@@ -540,7 +540,7 @@ sh_menuxray(){
 if ! type "nginx" "certbot" "unzip" "ufw" >/dev/null 2>&1; then
   blue "开始安装。"
   apt-get update && apt install -y ufw unzip certbot python3-certbot-nginx nginx
-  sh_html
+  sh_html; sh_domain; sh_filexray; sh_confxray; sh_servicexray; sh_cert; sh_confnginx; sh_sshd
 fi
 while true; do
   blue "1、Xray"
