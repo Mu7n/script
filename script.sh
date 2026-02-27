@@ -88,7 +88,6 @@ server {
     }
 }
 server {
-    ssl off
     listen unix:/dev/shm/uds4430.sock; #ssl proxy_protocol default_server;
     http2 on;
     set_real_ip_from unix:;
@@ -97,7 +96,6 @@ server {
     #ssl_reject_handshake on;
 } # 限定域名连接（包括禁止以 IP 方式访问网站）
 server {
-    ssl off
     listen 443 reuseport;
     listen [::]:443 reuseport;
     listen unix:/dev/shm/uds4430.sock; #ssl proxy_protocol;
