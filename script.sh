@@ -29,7 +29,6 @@
 #命令 2>/dev/null；错误信息输出到/dev/null；正确信息显示到屏幕
 #命令 >/dev/null 2>&1；全部信息输出到/dev/null
 
-
 set -ue
 red(){ echo -e "\e[31m$1\e[0m";}
 blue(){ echo -e "\e[34m$1\e[0m";}
@@ -125,6 +124,7 @@ server {
     } # 通告 HTTP/3 server 的可用性
 }
 DEST
+  nginx -t && nginx -s reload
 }
 
 sh_confxray(){
@@ -439,10 +439,10 @@ sh_domain(){
 
 sh_cert(){
   blue "申请SSL证书。"
-  systemctl restart nginx
   mkdir -p /var/www/_letsencrypt && chown nginx /var/www/_letsencrypt
+  systemctl restart nginx
   certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/_letsencrypt -m ssl@cert.bot -d $domain_sh
-  sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g; s/server \{\n    ssl off;/server \{/g' /etc/nginx/conf.d/default.conf
+  sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g' /etc/nginx/conf.d/default.conf
   nginx -t && systemctl reload nginx
   purple "Nginx配置完成！"
 }
