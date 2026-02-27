@@ -439,7 +439,7 @@ sh_domain(){
 
 sh_cert(){
   blue "申请SSL证书。"
-  systemctl start nginx
+  systemctl restart nginx
   mkdir -p /var/www/_letsencrypt && chown nginx /var/www/_letsencrypt
   certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/_letsencrypt -m ssl@cert.bot -d $domain_sh
   sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g; s/server \{\n    ssl off;/server \{/g' /etc/nginx/conf.d/default.conf
