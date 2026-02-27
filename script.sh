@@ -460,7 +460,7 @@ sh_filexray(){
   curl -OL $url_sh
   blue "提取$file_sh"
   unzip -oj $file_sh -d $path_sh
-  while true; do if [ -s ${path_sh}/${name_sh} ]; then break; fi; tag_sh="$($tag_sh)"; blue "$tag_sh"; sleep 5; curl -OL $url_sh; unzip -oj $file_sh -d $path_sh; done
+  while true; do if [ -s ${path_sh}/${name_sh} ]; then break; fi; tag_sh="$(curl -s $api_sh | grep 'tag_name' | awk -F '"' '{print $4}')"; blue "$tag_sh"; sleep 10; curl -OL $url_sh; unzip -oj $file_sh -d $path_sh; done
   rm -rf ${file_sh}
   ln -sf ${path_sh}/${name_sh} /usr/local/bin
 }
