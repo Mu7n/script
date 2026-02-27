@@ -83,9 +83,11 @@ CONFIG
 server {
     listen 80;
     listen [::]:80;
-    return 301 https://\$host\$request_uri;
     location ^~ /.well-known/acme-challenge/ {
         root /var/www/_letsencrypt;
+    }
+    location / {
+        return 301 https://\$host\$request_uri;
     }
 }
 server {
@@ -94,8 +96,8 @@ server {
     listen unix:/dev/shm/uds4430.sock ssl http2 proxy_protocol default_server;
     set_real_ip_from unix:;
     real_ip_header proxy_protocol;
-    #ssl_protocols TLSv1.2 TLSv1.3;
-    #ssl_reject_handshake on;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_reject_handshake on;
 } # 限定域名连接（包括禁止以 IP 方式访问网站）
 server {
     #listen 443 reuseport;
@@ -107,11 +109,11 @@ server {
     real_ip_header proxy_protocol;
     server_name $domain_sh;
     root /etc/nginx/Mu;
-    #ssl_certificate /etc/letsencrypt/live/${domain_sh}/fullchain.pem;
-    #ssl_certificate_key /etc/letsencrypt/live/${domain_sh}/privkey.pem;
-    #ssl_prefer_server_ciphers on;
-    #ssl_protocols TLSv1.2 TLSv1.3;
-    #ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+    ssl_certificate /etc/letsencrypt/live/${domain_sh}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${domain_sh}/privkey.pem;
+    ssl_prefer_server_ciphers on;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
     location /${servername_sh} {
         grpc_pass grpc://unix:/dev/shm/uds4438.sock;
         grpc_set_header Host \$host;
@@ -125,6 +127,9 @@ server {
     } # 通告 HTTP/3 server 的可用性
 }
 DEST
+  #sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g' /etc/nginx/conf.d/default.conf
+  nginx -t && systemctl reload nginx
+  purple "Nginx配置完成！"
 }
 
 sh_confxray(){
@@ -440,10 +445,18 @@ sh_domain(){
 sh_cert(){
   blue "申请SSL证书。"
   mkdir -p /var/www/_letsencrypt && chown www-data /var/www/_letsencrypt
-  certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/_letsencrypt -m ssl@cert.bot -d $domain_sh
-  #sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g' /etc/nginx/conf.d/default.conf
-  nginx -t && systemctl reload nginx
-  purple "Nginx配置完成！"
+  cat > /etc/nginx/conf.d/default.conf << TEST
+server {
+    listen 80;
+    listen [::]:80;
+    server_name $domain_sh;
+    return 301 https://\$host\$request_uri;
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/_letsencrypt;
+    }
+}
+TEST
+  certbot --nginx --force-renewal --agree-tos -n -m ssl@cert.bot -d $domain_sh
 }
 
 sh_filexray(){
@@ -486,14 +499,14 @@ sh_menunginx(){
       blue "3、退出"
       readp "请输入选项：" option_sh
       case $option_sh in
-        1) sh_confnginx; sh_cert; return;;
-        2) rm -rf /etc/letsencrypt/{live,renewal,archive}; sh_domain; sh_confnginx; sh_cert; return;;
+        1) sh_cert; sh_confnginx; return;;
+        2) rm -rf /etc/letsencrypt/{live,renewal,archive}; sh_domain; sh_cert; sh_confnginx; return;;
         3) blue "退出。"; return;;
         *) red "错误，请重新输入！"; continue;;
       esac
     done
   else
-    sh_domain; sh_confnginx; sh_cert; sh_filexray; sh_confxray; sh_servicexray; sh_sshd
+    sh_domain; sh_filexray; sh_confxray; sh_servicexray; sh_cert; sh_confnginx; sh_sshd
   fi
 }
 
@@ -515,7 +528,7 @@ sh_menuxray(){
       esac
     done
   else
-    sh_domain; sh_confnginx; sh_cert; sh_filexray; sh_confxray; sh_servicexray; sh_sshd
+    sh_domain; sh_filexray; sh_confxray; sh_servicexray; sh_cert; sh_confnginx; sh_sshd
   fi
 }
 
@@ -527,7 +540,8 @@ sh_menuxray(){
 #fi
 if ! type "nginx" "certbot" "unzip" "ufw" >/dev/null 2>&1; then
   blue "开始安装。"
-  apt-get update && apt install -y ufw unzip certbot nginx && sh_html
+  apt-get update && apt install -y ufw unzip certbot python3-certbot-nginx nginx
+  sh_html
 fi
 while true; do
   blue "1、Xray"
