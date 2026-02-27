@@ -88,18 +88,20 @@ server {
     }
 }
 server {
-    listen unix:/dev/shm/uds4430.sock; #ssl proxy_protocol default_server;
-    http2 on;
+    #listen unix:/dev/shm/uds4430.sock; #ssl proxy_protocol default_server; #不小于 1.25.1 可配置
+    #http2 on; #不小于 1.25.1 可配置
+    listen unix:/dev/shm/uds4430.sock ssl http2 proxy_protocol default_server;
     set_real_ip_from unix:;
     real_ip_header proxy_protocol;
     #ssl_protocols TLSv1.2 TLSv1.3;
     #ssl_reject_handshake on;
 } # 限定域名连接（包括禁止以 IP 方式访问网站）
 server {
-    listen 443 reuseport;
-    listen [::]:443 reuseport;
-    listen unix:/dev/shm/uds4430.sock; #ssl proxy_protocol;
-    http2 on;
+    #listen 443 reuseport;
+    #listen [::]:443 reuseport;
+    #listen unix:/dev/shm/uds4430.sock; #ssl proxy_protocol; #不小于 1.25.1 可配置
+    #http2 on; #不小于 1.25.1 可配置
+    listen unix:/dev/shm/uds4430.sock ssl http2 proxy_protocol;
     set_real_ip_from unix:;
     real_ip_header proxy_protocol;
     server_name $domain_sh;
