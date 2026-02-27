@@ -127,6 +127,7 @@ server {
     } # 通告 HTTP/3 server 的可用性
 }
 DEST
+  if [ ! -z nginx ]; then pkill -9 nginx; systemctl restart nginx; fi
   #sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g' /etc/nginx/conf.d/default.conf
   nginx -t && systemctl reload nginx
   purple "Nginx配置完成！"
@@ -450,10 +451,6 @@ server {
     listen 80;
     listen [::]:80;
     server_name $domain_sh;
-    return 301 https://\$host\$request_uri;
-    location ^~ /.well-known/acme-challenge/ {
-        root /var/www/_letsencrypt;
-    }
 }
 TEST
   certbot --nginx --force-renewal --agree-tos -n -m ssl@cert.bot -d $domain_sh
