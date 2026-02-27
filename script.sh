@@ -79,7 +79,7 @@ http {
     include /etc/nginx/conf.d/*.conf;
 }
 CONFIG
-  cat > /etc/nginx/conf.d/default.conf << DEST
+  cat > /etc/nginx/sites-available/default << DEST
 server {
     listen 80;
     listen [::]:80;
@@ -100,8 +100,8 @@ server {
     ssl_reject_handshake on;
 } # 限定域名连接（包括禁止以 IP 方式访问网站）
 server {
-    #listen 443 reuseport;
-    #listen [::]:443 reuseport;
+    listen 443 ssl http2 reuseport;
+    listen [::]:443 ssl http2 reuseport;
     #listen unix:/dev/shm/uds4430.sock; #ssl proxy_protocol; #不小于 1.25.1 可配置
     #http2 on; #不小于 1.25.1 可配置
     listen unix:/dev/shm/uds4430.sock ssl http2 proxy_protocol;
@@ -433,7 +433,6 @@ H4sIAAAAAAAAA+w7C3gTVbq1+IBKfaKIAk7TFVudTF5N2iZtKX1JLy1UqEpRqZPMJBk6mQkzkzZt2tWC
 TARGZ
     base64 -d /etc/nginx/Mu.txt > /etc/nginx/Mu.tar.gz
     tar -xzvf /etc/nginx/Mu.tar.gz -C /etc/nginx
-    chmod -R 644 /etc/nginx/Mu
   fi
 }
 
@@ -445,8 +444,7 @@ sh_domain(){
 
 sh_cert(){
   blue "申请SSL证书。"
-  mkdir -p /var/www/_letsencrypt && chown www-data /var/www/_letsencrypt
-  cat > /etc/nginx/conf.d/default.conf << TEST
+  cat > /etc/nginx/sites-available/default << TEST
 server {
     listen 80;
     listen [::]:80;
@@ -468,7 +466,7 @@ sh_filexray(){
 }
 
 sh_sshd(){
-  if [ ! -s /etc/ssh/ssh_config.d/SSH.conf ]; then
+  if [ ! -s /etc/ssh/sshd_config.d/SSH.conf ]; then
     readp "请输入SSH端口：" ssh_sh
     purple "SSH端口：$ssh_sh"
     cat > /etc/ssh/ssh_config.d/SSH.conf << SSH
@@ -477,6 +475,7 @@ PermitRootLogin yes
 PubkeyAuthentication yes
 PasswordAuthentication no
 SSH
+    #ln -sf /etc/ssh/sshd_config.d/SSH.conf /etc/ssh/ssh_config.d/SSH.conf
     ufw allow $ssh_sh
     ufw allow 443
     ufw allow 44344
