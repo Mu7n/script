@@ -28,7 +28,7 @@
 #命令 >/dev/null；正确信息输出到/dev/null；错误信息显示到屏幕
 #命令 2>/dev/null；错误信息输出到/dev/null；正确信息显示到屏幕
 #命令 >/dev/null 2>&1；全部信息输出到/dev/null
-#if [ $? == 0 ]; then sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g; s/server \{\n    ssl off;/server \{/g' /etc/nginx/conf.d/default.conf; fi
+
 
 set -ue
 red(){ echo -e "\e[31m$1\e[0m";}
@@ -89,27 +89,29 @@ server {
     }
 }
 server {
-    listen unix:/dev/shm/uds4430.sock ssl proxy_protocol default_server;
+    ssl off
+    listen unix:/dev/shm/uds4430.sock; #ssl proxy_protocol default_server;
     http2 on;
     set_real_ip_from unix:;
     real_ip_header proxy_protocol;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_reject_handshake on;
+    #ssl_protocols TLSv1.2 TLSv1.3;
+    #ssl_reject_handshake on;
 } # 限定域名连接（包括禁止以 IP 方式访问网站）
 server {
+    ssl off
     listen 443 reuseport;
     listen [::]:443 reuseport;
-    listen unix:/dev/shm/uds4430.sock ssl proxy_protocol;
+    listen unix:/dev/shm/uds4430.sock; #ssl proxy_protocol;
     http2 on;
     set_real_ip_from unix:;
     real_ip_header proxy_protocol;
     server_name $domain_sh;
     root /etc/nginx/Mu;
-    ssl_certificate /etc/letsencrypt/live/${domain_sh}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/${domain_sh}/privkey.pem;
-    ssl_prefer_server_ciphers on;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+    #ssl_certificate /etc/letsencrypt/live/${domain_sh}/fullchain.pem;
+    #ssl_certificate_key /etc/letsencrypt/live/${domain_sh}/privkey.pem;
+    #ssl_prefer_server_ciphers on;
+    #ssl_protocols TLSv1.2 TLSv1.3;
+    #ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
     location /${servername_sh} {
         grpc_pass grpc://unix:/dev/shm/uds4438.sock;
         grpc_set_header Host \$host;
@@ -123,8 +125,6 @@ server {
     } # 通告 HTTP/3 server 的可用性
 }
 DEST
-    nginx -t && nginx -s reload
-    purple "Nginx配置完成！"
 }
 
 sh_confxray(){
@@ -419,7 +419,7 @@ XRAY
   systemctl enable $name_sh
 }
 
-sh_apt(){
+sh_html(){
   if [ ! -s /etc/nginx/Mu ]; then
     blue "解压html。"
     cat > /etc/nginx/Mu.txt << 'TARGZ'
@@ -441,6 +441,9 @@ sh_cert(){
   blue "申请SSL证书。"
   systemctl start nginx
   certbot certonly --webroot --force-renewal --agree-tos -n -w /usr/share/nginx/html -m ssl@cert.bot -d $domain_sh
+  sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g; s/server \{\n    ssl off;/server \{/g' /etc/nginx/conf.d/default.conf
+  nginx -t && systemctl reload nginx
+  purple "Nginx配置完成！"
 }
 
 sh_filexray(){
@@ -478,25 +481,19 @@ sh_menunginx(){
     domain_sh="$(ls -l /etc/letsencrypt/live | awk '/^d/ {print $NF}')"
     while true; do
       purple "检测到已有$domain_sh证书。"
-      blue "1、更新域名"
-      blue "2、更改域名"
+      blue "1、续签"
+      blue "2、更改"
       blue "3、退出"
       readp "请输入选项：" option_sh
       case $option_sh in
-        1) sh_cert; sh_confnginx; return;;
-        2) rm -rf /etc/letsencrypt/{live,renewal,archive}; sh_domain; sh_cert; sh_confnginx; return;;
+        1) sh_confnginx; sh_cert; return;;
+        2) rm -rf /etc/letsencrypt/{live,renewal,archive}; sh_domain; sh_confnginx; sh_cert; return;;
         3) blue "退出。"; return;;
         *) red "错误，请重新输入！"; continue;;
       esac
     done
   else
-    sh_domain
-    sh_cert
-    sh_confnginx
-    sh_filexray
-    sh_confxray
-    sh_servicexray
-    sh_sshd
+    sh_domain; sh_confnginx; sh_cert; sh_filexray; sh_confxray; sh_servicexray; sh_sshd
   fi
 }
 
@@ -506,25 +503,19 @@ sh_menuxray(){
     domain_sh="$(ls -l /etc/letsencrypt/live | awk '/^d/ {print $NF}')"
     while true; do
       purple "检测到已安装$name_sh。"
-      blue "1、更新版本"
-      blue "2、更改配置"
+      blue "1、更新"
+      blue "2、配置"
       blue "3、退出"
       readp "请输入选项：" option_sh
       case $option_sh in
-        1) if [ ! -z $tag_sh ]; then sh_filexray; sh_servicexray; fi; return;;
+        1) if [ ! -z $tag_sh ]; then sh_filexray; sh_servicexray; else red "失败，请重新操作！"; fi; return;;
         2) if [ $vision_sh != $domain_sh ]; then blue "配置已更新。"; sh_confxray; systemctl restart xray; else blue "None。"; fi; return;;
         3) blue "退出。"; return;;
         *) red "错误，请重新输入！"; continue;;
       esac
     done
   else
-    sh_domain
-    sh_cert
-    sh_confnginx
-    sh_filexray
-    sh_confxray
-    sh_servicexray
-    sh_sshd
+    sh_domain; sh_confnginx; sh_cert; sh_filexray; sh_confxray; sh_servicexray; sh_sshd
   fi
 }
 
@@ -533,6 +524,7 @@ if [ ! -s /etc/apt/preferences.d/99nginx ]; then
   #gpg --dry-run --quiet --no-keyring --import --import-options import-show /usr/share/keyrings/nginx-archive-keyring.gpg
   echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/ubuntu `lsb_release -cs` nginx" | tee /etc/apt/sources.list.d/nginx.list
   echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx
+  sh_html
 fi
 if ! type "nginx" "certbot" "unzip" "ufw" >/dev/null 2>&1; then
   blue "开始安装。"
