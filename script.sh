@@ -85,7 +85,7 @@ server {
     listen [::]:80;
     return 301 https://\$host\$request_uri;
     location ^~ /.well-known/acme-challenge/ {
-        root /usr/share/nginx/html;
+        root /var/www/_letsencrypt;
     }
 }
 server {
@@ -440,7 +440,8 @@ sh_domain(){
 sh_cert(){
   blue "申请SSL证书。"
   systemctl start nginx
-  certbot certonly --webroot --force-renewal --agree-tos -n -w /usr/share/nginx/html -m ssl@cert.bot -d $domain_sh
+  mkdir -p /var/www/_letsencrypt && chown nginx /var/www/_letsencrypt
+  certbot certonly --webroot --force-renewal --agree-tos -n -w /var/www/_letsencrypt -m ssl@cert.bot -d $domain_sh
   sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g; s/server \{\n    ssl off;/server \{/g' /etc/nginx/conf.d/default.conf
   nginx -t && systemctl reload nginx
   purple "Nginx配置完成！"
