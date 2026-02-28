@@ -504,7 +504,7 @@ sh_menuxray(){
     blue "3、退出"
     readp "请输入选项：" option_sh
     case $option_sh in
-      1) if [ ! -z $tag_sh ]; then sh_filexray; sh_servicexray; else red "失败，请重新操作！"; fi; return;;
+      1) if [ ! -z $tag_sh ]; then sh_filexray; systemctl restart xray; else red "失败，请重新操作！"; fi; return;;
       2) if [ $vision_sh != $domain_sh ]; then blue "配置已修改。"; sh_confxray; systemctl restart xray; else blue "None。"; fi; return;;
       3) cyan "bye。"; return;;
       *) red "错误，请重新输入！"; continue;;
