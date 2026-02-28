@@ -446,7 +446,7 @@ sh_domain(){
 
 sh_cert(){
   blue "申请SSL证书。"
-  echo -e "server {\n    listen 80; listen [::]:80; server_name $domain_sh;\n}" > /etc/nginx/sites-available/default
+  echo -e "server {\n    listen 80;\n    listen [::]:80;\n    server_name $domain_sh;\n}" > /etc/nginx/sites-available/default
   certbot --nginx --force-renewal --agree-tos -n -m ssl@cert.bot -d $domain_sh
   sh_confnginx; nginx -t && systemctl reload nginx; purple "Nginx配置完成！"
 }
@@ -474,47 +474,39 @@ sh_sshd(){
 }
 
 sh_menunginx(){
-  if [ -s /etc/letsencrypt/live ]; then
-    domain_sh="$(ls -l /etc/letsencrypt/live | awk '/^d/ {print $NF}')"
-    while true; do
-      purple "检测到$domain_sh证书。"
-      blue "1、续签证书"
-      blue "2、更改域名"
-      blue "3、退出"
-      readp "请输入选项：" option_sh
-      case $option_sh in
-        1) sh_cert; return;;
-        2) rm -rf /etc/letsencrypt/{live,renewal,archive}; sh_domain; sh_cert; return;;
-        3) cyan "bye。"; return;;
-        *) red "错误，请重新输入！"; continue;;
-      esac
-    done
-  else
-    sh_domain; sh_filexray; sh_confxray; sh_servicexray; sh_cert; sh_sshd
-  fi
+  domain_sh="$(ls -l /etc/letsencrypt/live | awk '/^d/ {print $NF}')"
+  while true; do
+    purple "检测到$domain_sh证书。"
+    blue "1、续签证书"
+    blue "2、更改域名"
+    blue "3、退出"
+    readp "请输入选项：" option_sh
+    case $option_sh in
+      1) sh_cert; return;;
+      2) rm -rf /etc/letsencrypt/{live,renewal,archive}; sh_domain; sh_cert; return;;
+      3) cyan "bye。"; return;;
+      *) red "错误，请重新输入！"; continue;;
+    esac
+  done
 }
 
 sh_menuxray(){
-  if [ -s ${path_sh}/${name_sh} ]; then
-    version_sh="$(xray version | awk 'NR==1 {print $2}')"
-    vision_sh="$(grep -A 1 "serverNames" ${path_sh}/realityvision.json | awk -F '"' 'NR==2 {print $2}')"
-    domain_sh="$(ls -l /etc/letsencrypt/live | awk '/^d/ {print $NF}')"
-    while true; do
-      purple "检测到$version_sh版本。"
-      blue "1、更新内核"
-      blue "2、修改配置"
-      blue "3、退出"
-      readp "请输入选项：" option_sh
-      case $option_sh in
-        1) if [ ! -z $tag_sh ]; then sh_filexray; sh_servicexray; else red "失败，请重新操作！"; fi; return;;
-        2) if [ $vision_sh != $domain_sh ]; then blue "配置已修改。"; sh_confxray; systemctl restart xray; else blue "None。"; fi; return;;
-        3) cyan "bye。"; return;;
-        *) red "错误，请重新输入！"; continue;;
-      esac
-    done
-  else
-    sh_domain; sh_filexray; sh_confxray; sh_servicexray; sh_cert; sh_sshd
-  fi
+  version_sh="$(xray version | awk 'NR==1 {print $2}')"
+  vision_sh="$(grep -A 1 "serverNames" ${path_sh}/realityvision.json | awk -F '"' 'NR==2 {print $2}')"
+  domain_sh="$(ls -l /etc/letsencrypt/live | awk '/^d/ {print $NF}')"
+  while true; do
+    purple "检测到$version_sh版本。"
+    blue "1、更新内核"
+    blue "2、修改配置"
+    blue "3、退出"
+    readp "请输入选项：" option_sh
+    case $option_sh in
+      1) if [ ! -z $tag_sh ]; then sh_filexray; sh_servicexray; else red "失败，请重新操作！"; fi; return;;
+      2) if [ $vision_sh != $domain_sh ]; then blue "配置已修改。"; sh_confxray; systemctl restart xray; else blue "None。"; fi; return;;
+      3) cyan "bye。"; return;;
+      *) red "错误，请重新输入！"; continue;;
+    esac
+  done
 }
 
 #编译 Nginx
