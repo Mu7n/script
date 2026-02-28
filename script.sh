@@ -465,17 +465,16 @@ sh_filexray(){
 }
 
 sh_sshd(){
-  if [ ! -s /etc/ssh/sshd_config.d/SSH.conf ]; then
-    readp "请输入SSH端口：" ssh_sh
-    purple "SSH端口：$ssh_sh"
-    cat > /etc/ssh/ssh_config.d/SSH.conf << SSH
-Port $ssh_sh
+  if [ ! -s /etc/ssh/sshd_config.d/SSHD.conf ]; then
+    readp "请输入SSH端口：" sshd_sh
+    purple "SSH端口：$sshd_sh"
+    cat > /etc/ssh/sshd_config.d/SSHD.conf << SSHD
+Port $sshd_sh
 PermitRootLogin yes
 PubkeyAuthentication yes
 PasswordAuthentication no
-SSH
-    #ln -sf /etc/ssh/sshd_config.d/SSH.conf /etc/ssh/ssh_config.d/SSH.conf
-    ufw allow $ssh_sh
+SSHD
+    ufw allow $sshd_sh
     ufw allow 443
     ufw allow 44344
     ufw allow 44380
