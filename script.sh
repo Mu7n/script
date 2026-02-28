@@ -447,8 +447,11 @@ sh_domain(){
 sh_cert(){
   blue "申请SSL证书。"
   echo -e "server {\n    listen 80;\n    listen [::]:80;\n    server_name $domain_sh;\n}" > /etc/nginx/sites-available/default
+  systemctl reload nginx
   certbot --nginx --force-renewal --agree-tos -n -m ssl@cert.bot -d $domain_sh
-  sh_confnginx; nginx -t && systemctl reload nginx; purple "Nginx配置完成！"
+  sh_confnginx
+  nginx -t && systemctl reload nginx
+  purple "Nginx配置完成！"
 }
 
 sh_filexray(){
