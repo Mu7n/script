@@ -29,6 +29,7 @@
 #命令 2>/dev/null；错误信息输出到/dev/null；正确信息显示到屏幕
 #命令 >/dev/null 2>&1；全部信息输出到/dev/null
 #sed -i 's/目标/替换/g; s/目标/替换/g' /目录/文件
+#sed -i "s/目标/$替换/g" /目录/文件；引用变量需要把'换成"
 
 set -u
 red(){ echo -e "\e[31m$1\e[0m";}
@@ -444,13 +445,7 @@ sh_domain(){
 
 sh_cert(){
   blue "申请SSL证书。"
-  cat > /etc/nginx/sites-available/default << CERT
-server {
-    listen 80;
-    listen [::]:80;
-    server_name $domain_sh;
-}
-CERT
+  sed -i "s/_;/$domain_sh;/g" /etc/nginx/sites-available/default
   certbot --nginx --force-renewal --agree-tos -n -m ssl@cert.bot -d $domain_sh
   sh_confnginx; nginx -t && systemctl reload nginx; purple "Nginx配置完成！"
 }
