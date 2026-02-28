@@ -462,42 +462,38 @@ sh_filexray(){
 }
 
 sh_sshd(){
-  if [ ! -s /etc/ssh/sshd_config.d/SSHD.conf ]; then
-    readp "请输入SSH端口：" sshd_sh
-    purple "SSH端口：$sshd_sh"
-    cat > /etc/ssh/sshd_config.d/SSHD.conf << SSHD
-Port $sshd_sh
-PermitRootLogin yes
-PubkeyAuthentication yes
-PasswordAuthentication no
-SSHD
+  readp "请输入SSH端口：" sshd_sh
+  purple "SSH端口：$sshd_sh"
+  if [ -s /usr/lib/systemd/system/ssh.socket ]; then
+    sed -i "s/:22/:$sshd_sh/g" /usr/lib/systemd/system/ssh.socket
     ufw allow $sshd_sh
     ufw allow 443
     ufw allow 44344
     ufw allow 44380
     echo "y" | ufw enable
-    systemctl restart ssh
-  fi
-  if [ ! -s /usr/lib/systemd/system/ssh.socket ]; then
-    sed -i 's/:22/:22598/g' /usr/lib/systemd/system/ssh.socket
     systemctl daemon-reload
     systemctl restart ssh.socket
+  else
+    sed -i '$a PermitRootLogin yes\nPubkeyAuthentication yes\nPasswordAuthentication no\n'"Port $sshd_sh"'' /etc/ssh/sshd_config
+    systemctl restart ssh
   fi
+  ufw allow $sshd_sh; ufw allow 443; ufw allow 44344; ufw allow 44380
+  echo "y" | ufw enable >/dev/null
 }
 
 sh_menunginx(){
   if [ -s /etc/letsencrypt/live ]; then
     domain_sh="$(ls -l /etc/letsencrypt/live | awk '/^d/ {print $NF}')"
     while true; do
-      purple "检测到已有$domain_sh证书。"
-      blue "1、续签"
-      blue "2、更改"
+      purple "检测到$domain_sh证书。"
+      blue "1、续签证书"
+      blue "2、更改域名"
       blue "3、退出"
       readp "请输入选项：" option_sh
       case $option_sh in
         1) sh_cert; return;;
         2) rm -rf /etc/letsencrypt/{live,renewal,archive}; sh_domain; sh_cert; return;;
-        3) blue "退出。"; return;;
+        3) cyan "。。。"; return;;
         *) red "错误，请重新输入！"; continue;;
       esac
     done
@@ -508,18 +504,19 @@ sh_menunginx(){
 
 sh_menuxray(){
   if [ -s ${path_sh}/${name_sh} ]; then
+    version_sh="$(xray version | awk 'NR==1 {print $2}')"
     vision_sh="$(grep -A 1 "serverNames" ${path_sh}/realityvision.json | awk -F '"' 'NR==2 {print $2}')"
     domain_sh="$(ls -l /etc/letsencrypt/live | awk '/^d/ {print $NF}')"
     while true; do
-      purple "检测到已安装$name_sh。"
-      blue "1、更新"
-      blue "2、配置"
+      purple "检测到$version_sh版本。"
+      blue "1、更新内核"
+      blue "2、修改配置"
       blue "3、退出"
       readp "请输入选项：" option_sh
       case $option_sh in
         1) if [ ! -z $tag_sh ]; then sh_filexray; sh_servicexray; else red "失败，请重新操作！"; fi; return;;
-        2) if [ $vision_sh != $domain_sh ]; then blue "配置已更新。"; sh_confxray; systemctl restart xray; else blue "None。"; fi; return;;
-        3) blue "退出。"; return;;
+        2) if [ $vision_sh != $domain_sh ]; then blue "配置已修改。"; sh_confxray; systemctl restart xray; else blue "None。"; fi; return;;
+        3) cyan "。。。"; return;;
         *) red "错误，请重新输入！"; continue;;
       esac
     done
@@ -544,12 +541,12 @@ fi
 while true; do
   blue "1、Xray"
   blue "2、Nginx"
-  blue "3、退出"
+  blue "3、Exit"
   readp "请输入选项：" option_sh
   case $option_sh in
     1) sh_menuxray; continue;;
     2) sh_menunginx; continue;;
-    3) blue "退出。"; break;;
+    3) cyan "bye。"; break;;
     *) red "错误，请重新输入！"; continue;;
   esac
 done
