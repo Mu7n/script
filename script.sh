@@ -11,8 +11,9 @@
 #awk中/ /是正则表达式；^表示字符串中开始的位置；d/-分别是权限中开始字符
 #ls -l /目录 | awk '/^d/ {print $NF}'；打印/目录下的子目录
 #ls -l /目录 | awk '/^-/ {print $NF}'；打印/目录下的文件
-#chmod +x script.sh；赋予执行权限
-#chmod -R 755 文件；赋予文件权限 -R递归修改目录
+#sed -i 's/目标/替换/g; s/目标/替换/g' /目录/文件
+#sed -i "s/目标/$替换/g" /目录/文件；引用变量需要把'换成"或'"$替换"'
+#sed -i '$a '"$变量"'\n文本' /目录/文件；在最后一行$a插入；引用变量需要'"$"'
 #tar -zcvf 文件.tar.gz /目录
 #tar -xzvf /目录/文件.tar.gz -C /解压指定目录
 #base64 -w 0 Mu.tar.gz > Mu.txt；base64编码
@@ -26,10 +27,7 @@
 #if [ -z $string ]；如果变量等于0或空
 #if [ ! -z $string ]；如果变量大于0或非空
 #命令 >/dev/null；正确信息输出到/dev/null；错误信息显示到屏幕
-#命令 2>/dev/null；错误信息输出到/dev/null；正确信息显示到屏幕
 #命令 >/dev/null 2>&1；全部信息输出到/dev/null
-#sed -i 's/目标/替换/g; s/目标/替换/g' /目录/文件
-#sed -i "s/目标/$替换/g" /目录/文件；引用变量需要把'换成"
 
 set -u
 red(){ echo -e "\e[31m$1\e[0m";}
