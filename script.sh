@@ -525,7 +525,7 @@ sh_menuxray(){
 #  echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx >/dev/null
 #fi
 
-if ! type "nginx" "certbot" "python3-certbot-nginx" "unzip" "ufw" >/dev/null 2>&1; then
+if ! type "nginx" "certbot" "unzip" "ufw" >/dev/null 2>&1; then
   blue "开始安装。"
   apt-get update && apt install -y ufw unzip certbot python3-certbot-nginx nginx
   sh_html; sh_domain; sh_filexray; sh_confxray; sh_servicexray; sh_cert; sh_sshd
