@@ -14,6 +14,7 @@
 #sed -i 's/目标/替换/g; s/目标/替换/g' /目录/文件
 #sed -i "s/目标/$替换/g" /目录/文件；引用变量需要把'换成"或'"$替换"'
 #sed -i '$a '"$变量"'\n文本' /目录/文件；在最后一行$a插入；引用变量需要'"$"'
+#echo -e "文本\n换行\n" > /目录/文件；不存在则创建，存在则覆盖
 #tar -zcvf 文件.tar.gz /目录
 #tar -xzvf /目录/文件.tar.gz -C /解压指定目录
 #base64 -w 0 Mu.tar.gz > Mu.txt；base64编码
@@ -26,6 +27,8 @@
 #if [ ! -s 文件 ]；如果文件不存在或size等于0
 #if [ -z $string ]；如果变量等于0或空
 #if [ ! -z $string ]；如果变量大于0或非空
+#if ! 命令;then；如果命令失败则
+#if ! grep "查询" /目录/文件;then；如果未检索到则
 #命令 >/dev/null；正确信息输出到/dev/null；错误信息显示到屏幕
 #命令 >/dev/null 2>&1；全部信息输出到/dev/null
 
@@ -443,7 +446,7 @@ sh_domain(){
 
 sh_cert(){
   blue "申请SSL证书。"
-  sed -i "s/_;/$domain_sh;/g" /etc/nginx/sites-available/default
+  echo -e "server {\n    listen 80; listen [::]:80; server_name $domain_sh;\n}" > /etc/nginx/sites-available/default
   certbot --nginx --force-renewal --agree-tos -n -m ssl@cert.bot -d $domain_sh
   sh_confnginx; nginx -t && systemctl reload nginx; purple "Nginx配置完成！"
 }
@@ -460,23 +463,15 @@ sh_filexray(){
 }
 
 sh_sshd(){
-  readp "请输入SSH端口：" sshd_sh
-  purple "SSH端口：$sshd_sh"
-  if [ -s /usr/lib/systemd/system/ssh.socket ]; then
-    sed -i "s/:22/:$sshd_sh/g" /usr/lib/systemd/system/ssh.socket
-    ufw allow $sshd_sh
-    ufw allow 443
-    ufw allow 44344
-    ufw allow 44380
-    echo "y" | ufw enable
-    systemctl daemon-reload
-    systemctl restart ssh.socket
-  else
-    sed -i '$a PermitRootLogin yes\nPubkeyAuthentication yes\nPasswordAuthentication no\n'"Port $sshd_sh"'' /etc/ssh/sshd_config
+  if [ ! -s /etc/ssh/sshd_config.d/sshd.conf ]; then
+    readp "请输入SSH端口：" sshd_sh
+    purple "SSH端口：$sshd_sh"
+    echo -e "PermitRootLogin yes\nPubkeyAuthentication yes\nPasswordAuthentication no\nPort $sshd_sh" > /etc/ssh/sshd_config.d/sshd.conf
+    ufw allow $sshd_sh; ufw allow 443; ufw allow 44344; ufw allow 44380
+    if [ -s /usr/lib/systemd/system/ssh.socket ]; then sed -i "s/22/$sshd_sh/g" /usr/lib/systemd/system/ssh.socket && systemctl daemon-reload && systemctl restart ssh.socket; fi
+    echo "y" | ufw enable >/dev/null
     systemctl restart ssh
   fi
-  ufw allow $sshd_sh; ufw allow 443; ufw allow 44344; ufw allow 44380
-  echo "y" | ufw enable >/dev/null
 }
 
 sh_menunginx(){
