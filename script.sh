@@ -2,33 +2,33 @@
 
 #用到哪，学到哪。
 #bash <(curl -sSL https://get.docker.com)；安装docker
-#export PATH="/etc/ALLINONE/进程文件或脚本:$PATH"；ln -s ${进程文件或脚本} /usr/local/bin；终端输入进程/脚本名称可直接运行
+#export PATH="/目录/文件:$PATH"；ln -s ${文件} /usr/local/bin；终端输入进程/脚本名称可直接运行
 #vim按下i进入编辑模式；按下ecs退出编辑模式；输入:wq!强制保存退出；输入:q!退出不保存
 #iptables -A INPUT -p tcp --dport 端口 -j ACCEPT
-#systemctl start 进程；service 进程 start
+#systemctl status 进程；service 进程 status
 #ps -ef | grep 进程 | grep -v grep | awk '{print $2}'；查找进程ID
 #awk -F '"' '{print $4}' | cut -c 2-；以' " '分隔号；-c 2显示第二个字符；-c 2-从第二个字符开始显示
 #awk中/ /是正则表达式；^表示字符串中开始的位置；d/-分别是权限中开始字符
-#ls -l /etc/letsencrypt/live | awk '/^d/ {print $NF}'；打印/live下的子目录
-#ls -l /etc/letsencrypt/live | awk '/^-/ {print $NF}'；打印/live下的文件
+#ls -l /目录 | awk '/^d/ {print $NF}'；打印/目录下的子目录
+#ls -l /目录 | awk '/^-/ {print $NF}'；打印/目录下的文件
 #chmod +x script.sh；赋予执行权限
-#chmod -R 755 文件 && chown root:root -R 文件；赋予文件权限 -R递归修改目录
-#tar -zcvf 文件.tar.gz /文件目录
-#tar -xzvf /文件目录/文件.tar.gz -C /解压指定目录
+#chmod -R 755 文件；赋予文件权限 -R递归修改目录
+#tar -zcvf 文件.tar.gz /目录
+#tar -xzvf /目录/文件.tar.gz -C /解压指定目录
 #base64 -w 0 Mu.tar.gz > Mu.txt；base64编码
 #base64 -d /etc/nginx/Mu.txt > /etc/nginx/Mu.tar.gz；base64解码
 #cat > file << EOF；覆盖&转义(文本中不需要转义的特殊符号前加\)
 #cat >> file << 'EOF'；追加&禁止转义(开头EOF加上''即可)
 #set -ue(退出报错)；set -x(显示命令)
 # ！(非、不是)；
-#if [ -s 文件]；如果文件存在或size大于0)
-#if [ ! -s 文件]；如果文件不存在或size等于0
-#if [ -z $string]；如果变量等于0或空)
-#if [ ! -z $string]；如果变量大于0或非空
+#if [ -s 文件 ]；如果文件存在或size大于0
+#if [ ! -s 文件 ]；如果文件不存在或size等于0
+#if [ -z $string ]；如果变量等于0或空
+#if [ ! -z $string ]；如果变量大于0或非空
 #命令 >/dev/null；正确信息输出到/dev/null；错误信息显示到屏幕
 #命令 2>/dev/null；错误信息输出到/dev/null；正确信息显示到屏幕
 #命令 >/dev/null 2>&1；全部信息输出到/dev/null
-#sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g' /etc/nginx/conf.d/default.conf
+#sed -i 's/目标/替换/g; s/目标/替换/g' /目录/文件
 
 set -u
 red(){ echo -e "\e[31m$1\e[0m";}
