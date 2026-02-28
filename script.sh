@@ -123,11 +123,11 @@ server {
     location / {
         add_header Alt-Svc 'h3=":443"; ma=86400';
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-        add_header X-XSS-Protection          "1; mode=block" always;
-        add_header X-Content-Type-Options    "nosniff" always;
-        add_header Referrer-Policy           "no-referrer-when-downgrade" always;
-        add_header Content-Security-Policy   "default-src 'self' http: https: ws: wss: data: blob: 'unsafe-inline'; frame-ancestors 'self';" always;
-        add_header Permissions-Policy        "interest-cohort=()" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer-when-downgrade" always;
+        add_header Content-Security-Policy "default-src 'self' http: https: ws: wss: data: blob: 'unsafe-inline'; frame-ancestors 'self';" always;
+        add_header Permissions-Policy "interest-cohort=()" always;
         root /etc/nginx/Mu;
         index index.html index.htm;
     } # 通告 HTTP/3 server 的可用性
@@ -467,10 +467,9 @@ sh_sshd(){
     readp "请输入SSH端口：" sshd_sh
     purple "SSH端口：$sshd_sh"
     echo -e "PermitRootLogin yes\nPubkeyAuthentication yes\nPasswordAuthentication no\nPort $sshd_sh" > /etc/ssh/sshd_config.d/sshd.conf
-    ufw allow $sshd_sh; ufw allow 443; ufw allow 44344; ufw allow 44380
-    if [ -s /usr/lib/systemd/system/ssh.socket ]; then sed -i "s/22/$sshd_sh/g" /usr/lib/systemd/system/ssh.socket && systemctl daemon-reload && systemctl restart ssh.socket; fi
-    echo "y" | ufw enable >/dev/null
     systemctl restart ssh
+    if [ -s /usr/lib/systemd/system/ssh.socket ]; then sed -i "s/22/$sshd_sh/g" /usr/lib/systemd/system/ssh.socket && systemctl daemon-reload && systemctl restart ssh.socket; fi
+    ufw allow $sshd_sh; ufw allow 443; ufw allow 44344; ufw allow 44380; echo "y" | ufw enable >/dev/null
   fi
 }
 
