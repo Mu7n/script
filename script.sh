@@ -485,7 +485,7 @@ sh_menunginx(){
       case $option_sh in
         1) sh_cert; return;;
         2) rm -rf /etc/letsencrypt/{live,renewal,archive}; sh_domain; sh_cert; return;;
-        3) cyan "。。。"; return;;
+        3) cyan "bye。"; return;;
         *) red "错误，请重新输入！"; continue;;
       esac
     done
@@ -508,7 +508,7 @@ sh_menuxray(){
       case $option_sh in
         1) if [ ! -z $tag_sh ]; then sh_filexray; sh_servicexray; else red "失败，请重新操作！"; fi; return;;
         2) if [ $vision_sh != $domain_sh ]; then blue "配置已修改。"; sh_confxray; systemctl restart xray; else blue "None。"; fi; return;;
-        3) cyan "。。。"; return;;
+        3) cyan "bye。"; return;;
         *) red "错误，请重新输入！"; continue;;
       esac
     done
