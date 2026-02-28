@@ -115,7 +115,7 @@ server {
     ssl_prefer_server_ciphers on;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
-    location /${servername_sh} {
+    location /${domain_sh} {
         grpc_pass grpc://unix:/dev/shm/uds4438.sock;
         grpc_set_header Host \$host;
         grpc_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
