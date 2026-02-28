@@ -65,7 +65,6 @@ events {
 http {
     include mime.types;
     default_type application/octet-stream;
-    charset utf-8;
     sendfile on;
     server_tokens off;
     keepalive_timeout 65;
@@ -122,6 +121,11 @@ server {
     location / {
         add_header Alt-Svc 'h3=":443"; ma=86400';
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+        add_header X-XSS-Protection          "1; mode=block" always;
+        add_header X-Content-Type-Options    "nosniff" always;
+        add_header Referrer-Policy           "no-referrer-when-downgrade" always;
+        add_header Content-Security-Policy   "default-src 'self' http: https: ws: wss: data: blob: 'unsafe-inline'; frame-ancestors 'self';" always;
+        add_header Permissions-Policy        "interest-cohort=()" always;
         root /etc/nginx/Mu;
         index index.html index.htm;
     } # 通告 HTTP/3 server 的可用性
