@@ -479,6 +479,11 @@ SSHD
     echo "y" | ufw enable
     systemctl restart ssh
   fi
+  if [ ! -s /usr/lib/systemd/system/ssh.socket ]; then
+    sed -i 's/:22/:22598/g' /usr/lib/systemd/system/ssh.socket
+    systemctl daemon-reload
+    systemctl restart ssh.socket
+  fi
 }
 
 sh_menunginx(){
