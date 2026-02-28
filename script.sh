@@ -28,6 +28,7 @@
 #命令 >/dev/null；正确信息输出到/dev/null；错误信息显示到屏幕
 #命令 2>/dev/null；错误信息输出到/dev/null；正确信息显示到屏幕
 #命令 >/dev/null 2>&1；全部信息输出到/dev/null
+#sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g' /etc/nginx/conf.d/default.conf
 
 set -u
 red(){ echo -e "\e[31m$1\e[0m";}
@@ -126,10 +127,6 @@ server {
     } # 通告 HTTP/3 server 的可用性
 }
 DEST
-#  if [ ! -z nginx ]; then pkill -9 nginx; systemctl restart nginx; fi
-  #sed -i 's/#ssl_/ssl_/g; s/; #ssl/ ssl/g' /etc/nginx/conf.d/default.conf
-  nginx -t && systemctl reload nginx
-  purple "Nginx配置完成！"
 }
 
 sh_confxray(){
@@ -443,14 +440,15 @@ sh_domain(){
 
 sh_cert(){
   blue "申请SSL证书。"
-  cat > /etc/nginx/sites-available/default << TEST
+  cat > /etc/nginx/sites-available/default << CERT
 server {
     listen 80;
     listen [::]:80;
     server_name $domain_sh;
 }
-TEST
+CERT
   certbot --nginx --force-renewal --agree-tos -n -m ssl@cert.bot -d $domain_sh
+  sh_confnginx; nginx -t && systemctl reload nginx; purple "Nginx配置完成！"
 }
 
 sh_filexray(){
@@ -493,14 +491,14 @@ sh_menunginx(){
       blue "3、退出"
       readp "请输入选项：" option_sh
       case $option_sh in
-        1) sh_cert; sh_confnginx; return;;
-        2) rm -rf /etc/letsencrypt/{live,renewal,archive}; sh_domain; sh_cert; sh_confnginx; return;;
+        1) sh_cert; return;;
+        2) rm -rf /etc/letsencrypt/{live,renewal,archive}; sh_domain; sh_cert; return;;
         3) blue "退出。"; return;;
         *) red "错误，请重新输入！"; continue;;
       esac
     done
   else
-    sh_domain; sh_filexray; sh_confxray; sh_servicexray; sh_cert; sh_confnginx; sh_sshd
+    sh_domain; sh_filexray; sh_confxray; sh_servicexray; sh_cert; sh_sshd
   fi
 }
 
@@ -522,7 +520,7 @@ sh_menuxray(){
       esac
     done
   else
-    sh_domain; sh_filexray; sh_confxray; sh_servicexray; sh_cert; sh_confnginx; sh_sshd
+    sh_domain; sh_filexray; sh_confxray; sh_servicexray; sh_cert; sh_sshd
   fi
 }
 
@@ -534,10 +532,10 @@ sh_menuxray(){
 #  echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | tee /etc/apt/preferences.d/99nginx >/dev/null
 #fi
 
-if ! type "nginx" "certbot" "unzip" "ufw" >/dev/null 2>&1; then
+if ! type "nginx" "certbot" "python3-certbot-nginx" "unzip" "ufw" >/dev/null 2>&1; then
   blue "开始安装。"
   apt-get update && apt install -y ufw unzip certbot python3-certbot-nginx nginx
-  sh_html; sh_domain; sh_filexray; sh_confxray; sh_servicexray; sh_cert; sh_confnginx; sh_sshd
+  sh_html; sh_domain; sh_filexray; sh_confxray; sh_servicexray; sh_cert; sh_sshd
 fi
 while true; do
   blue "1、Xray"
